@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+                             https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+    
+    <display-name>E-Commerce System</display-name>
+    
+    <!-- 数据库自动初始化Servlet（最高优先级） -->
+    <servlet>
+        <servlet-name>DatabaseInitServlet</servlet-name>
+        <servlet-class>common.example.servlet.DatabaseInitServlet</servlet-class>
+        <load-on-startup>0</load-on-startup>
+    </servlet>
+    
+    <!-- 配置欢迎页面，通过Servlet处理登录逻辑 -->
+    <welcome-file-list>
+        <welcome-file>login</welcome-file>
+    </welcome-file-list>
+    
+    <!-- 配置会话超时时间（分钟） -->
+    <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config>
+    
+</web-app>
