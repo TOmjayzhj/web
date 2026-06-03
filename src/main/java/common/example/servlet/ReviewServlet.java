@@ -13,15 +13,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
-/**
- * 商品评价Servlet
- */
 @WebServlet("/review")
 public class ReviewServlet extends HttpServlet {
     
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // 获取商品评价
         String productId = request.getParameter("productId");
         
         if (productId == null || productId.trim().isEmpty()) {
@@ -30,7 +26,6 @@ public class ReviewServlet extends HttpServlet {
             return;
         }
         
-        // 获取评价列表
         List<ProductReview> reviews = ProductReviewDAO.getReviewsByProductId(productId);
         double avgRating = ProductReviewDAO.getAverageRating(productId);
         int reviewCount = ProductReviewDAO.getReviewCount(productId);
@@ -46,7 +41,6 @@ public class ReviewServlet extends HttpServlet {
             }
         }
         
-        // 返回JSON数据
         response.setContentType("application/json;charset=UTF-8");
         PrintWriter out = response.getWriter();
         out.write("{");
@@ -88,9 +82,8 @@ public class ReviewServlet extends HttpServlet {
         
         String action = request.getParameter("action");
         
-        // 处理删除评价（管理员功能）
+        // 删除评价（管理员）
         if ("delete".equals(action)) {
-            // 检查是否为管理员
             String role = (String) session.getAttribute("role");
             if (!"admin".equals(role)) {
                 response.getWriter().write("{\"success\":false,\"message\":\"权限不足\"}");
@@ -118,7 +111,7 @@ public class ReviewServlet extends HttpServlet {
             return;
         }
         
-        // 检查是否为管理员
+        // 检查管理员权限
         String role = (String) session.getAttribute("role");
         if ("admin".equals(role)) {
             response.getWriter().write("{\"success\":false,\"message\":\"管理员无权评价商品\"}");
@@ -152,13 +145,11 @@ public class ReviewServlet extends HttpServlet {
             return;
         }
         
-        // 检查是否购买过该商品
+        // 检查是否购买过
         if (!ProductReviewDAO.hasUserPurchased(username, productId)) {
             response.getWriter().write("{\"success\":false,\"message\":\"您还没有购买过该商品，无法评价\"}");
             return;
         }
-        
-        // 允许随时追加评价，不再检查是否已评价过
         
         // 添加评价
         boolean success = ProductReviewDAO.addReview(productId, username, rating, content.trim());
@@ -170,9 +161,6 @@ public class ReviewServlet extends HttpServlet {
         }
     }
     
-    /**
-     * 转义JSON特殊字符
-     */
     private String escapeJson(String text) {
         if (text == null) return "";
         return text.replace("\\", "\\\\")

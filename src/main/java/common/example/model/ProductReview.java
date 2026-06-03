@@ -2,22 +2,17 @@ package common.example.model;
 
 import java.util.Date;
 
-/**
- * 商品评价实体类
- */
 public class ProductReview {
-    private int id;                // 评价ID
-    private String productId;      // 商品ID
-    private String username;       // 评价用户名
-    private int rating;            // 评分(1-5星)
-    private String content;        // 评价内容
-    private Date reviewTime;       // 评价时间
+    private int id;
+    private String productId;
+    private String username;
+    private int rating;
+    private String content;
+    private Date reviewTime;
     
-    // 无参构造函数
     public ProductReview() {
     }
     
-    // 全参构造函数
     public ProductReview(int id, String productId, String username, int rating, String content, Date reviewTime) {
         this.id = id;
         this.productId = productId;
@@ -27,7 +22,6 @@ public class ProductReview {
         this.reviewTime = reviewTime;
     }
     
-    // Getter 和 Setter 方法
     public int getId() {
         return id;
     }

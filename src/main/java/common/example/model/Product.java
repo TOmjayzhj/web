@@ -1,20 +1,15 @@
 package common.example.model;
 
-/**
- * 商品实体类
- */
 public class Product {
-    private String id;          // 商品ID
-    private String name;        // 商品名称
-    private String category;    // 商品分类
-    private String icon;        // 商品图标
-    private double price;       // 商品价格
+    private String id;
+    private String name;
+    private String category;
+    private String icon;
+    private double price;
     
-    // 无参构造函数
     public Product() {
     }
     
-    // 全参构造函数
     public Product(String id, String name, String category, String icon, double price) {
         this.id = id;
         this.name = name;
@@ -23,7 +18,6 @@ public class Product {
         this.price = price;
     }
     
-    // Getter 和 Setter 方法
     public String getId() {
         return id;
     }

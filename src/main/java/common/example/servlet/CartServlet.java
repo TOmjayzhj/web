@@ -15,9 +15,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
-/**
- * 购物车Servlet - 处理购物车相关的HTTP请求
- */
 @WebServlet("/cart")
 public class CartServlet extends HttpServlet {
     
@@ -35,7 +32,7 @@ public class CartServlet extends HttpServlet {
             return;
         }
         
-        // 检查是否为管理员
+        // 检查管理员权限
         String role = (String) session.getAttribute("role");
         if ("admin".equals(role)) {
             response.setStatus(403);
@@ -47,14 +44,13 @@ public class CartServlet extends HttpServlet {
         String action = request.getParameter("action");
         
         if (action == null) {
-            action = "view"; // 默认查看购物车
+            action = "view";
         }
         
         PrintWriter out = response.getWriter();
         
         switch (action) {
             case "view":
-                // 查看购物车
                 List<CartItem> cart = CartDAO.getCart(username);
                 double total = CartDAO.getTotalPrice(username);
                 int count = CartDAO.getItemCount(username);
@@ -75,26 +71,18 @@ public class CartServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
-        System.out.println("=== CartServlet doPost 被调用 ===");
-        
         request.setCharacterEncoding("UTF-8");
         response.setContentType("application/json;charset=UTF-8");
         
         HttpSession session = request.getSession(false);
-        System.out.println("Session: " + session);
-        if (session != null) {
-            System.out.println("Session ID: " + session.getId());
-            System.out.println("Username: " + session.getAttribute("username"));
-        }
         
         if (session == null || session.getAttribute("username") == null) {
-            System.out.println("错误：用户未登录");
             response.setStatus(401);
             response.getWriter().write("{\"error\":\"未登录\"}");
             return;
         }
         
-        // 检查是否为管理员
+        // 检查管理员权限
         String postRole = (String) session.getAttribute("role");
         if ("admin".equals(postRole)) {
             response.setStatus(403);
@@ -104,8 +92,6 @@ public class CartServlet extends HttpServlet {
         
         String username = (String) session.getAttribute("username");
         String action = request.getParameter("action");
-        
-        System.out.println("Username: " + username + ", Action: " + action);
         
         if (action == null) {
             response.setStatus(400);
@@ -117,15 +103,12 @@ public class CartServlet extends HttpServlet {
         
         switch (action) {
             case "add":
-                // 添加商品到购物车
                 String productId = request.getParameter("productId");
                 String quantityStr = request.getParameter("quantity");
                 
-                System.out.println("添加商品 - ProductId: " + productId + ", Quantity: " + quantityStr);
-                
                 int quantity = Integer.parseInt(quantityStr);
                 
-                // 从 ProductDAOMySQL 获取商品信息
+                // 获取商品信息
                 Product product = ProductDAOMySQL.getProductById(productId);
                 if (product == null) {
                     response.setStatus(404);
@@ -148,7 +131,6 @@ public class CartServlet extends HttpServlet {
                 break;
                 
             case "update":
-                // 更新商品数量
                 String updateProductId = request.getParameter("productId");
                 int newQuantity = Integer.parseInt(request.getParameter("quantity"));
                 
@@ -157,14 +139,12 @@ public class CartServlet extends HttpServlet {
                 break;
                 
             case "remove":
-                // 删除商品
                 String removeProductId = request.getParameter("productId");
                 CartDAO.removeFromCart(username, removeProductId);
                 out.print("{\"success\":true,\"message\":\"删除成功\"}");
                 break;
                 
             case "clear":
-                // 清空购物车
                 CartDAO.clearCart(username);
                 out.print("{\"success\":true,\"message\":\"购物车已清空\"}");
                 break;
@@ -178,9 +158,7 @@ public class CartServlet extends HttpServlet {
         out.flush();
     }
     
-    /**
-     * 将购物车数据转换为JSON
-     */
+    /** 购物车转JSON */
     private String convertCartToJson(List<CartItem> cart, double total, int count) {
         StringBuilder json = new StringBuilder();
         json.append("{");

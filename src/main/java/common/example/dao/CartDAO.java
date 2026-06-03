@@ -10,16 +10,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 购物车数据访问对象 - 使用MySQL数据库
- */
 public class CartDAO {
     
-    /**
-     * 添加商品到购物车
-     * @param username 用户名
-     * @param item 购物车项
-     */
+    /** 添加商品到购物车 */
     public static void addToCart(String username, CartItem item) {
         String sql = "INSERT INTO cart (username, product_id, product_name, icon, price, quantity) " +
                      "VALUES (?, ?, ?, ?, ?, ?) " +
@@ -43,11 +36,7 @@ public class CartDAO {
         }
     }
     
-    /**
-     * 获取用户的购物车
-     * @param username 用户名
-     * @return 购物车商品列表
-     */
+    /** 获取购物车列表 */
     public static List<CartItem> getCart(String username) {
         List<CartItem> cart = new ArrayList<>();
         String sql = "SELECT product_id, product_name, icon, price, quantity FROM cart WHERE username = ?";
@@ -78,15 +67,9 @@ public class CartDAO {
         return cart;
     }
     
-    /**
-     * 更新商品数量
-     * @param username 用户名
-     * @param productId 商品ID
-     * @param quantity 新数量
-     */
+    /** 更新商品数量 */
     public static void updateQuantity(String username, String productId, int quantity) {
         if (quantity <= 0) {
-            // 数量<=0则删除商品
             removeFromCart(username, productId);
             return;
         }
@@ -108,11 +91,7 @@ public class CartDAO {
         }
     }
     
-    /**
-     * 从购物车删除商品
-     * @param username 用户名
-     * @param productId 商品ID
-     */
+    /** 删除购物车商品 */
     public static void removeFromCart(String username, String productId) {
         String sql = "DELETE FROM cart WHERE username = ? AND product_id = ?";
         
@@ -130,10 +109,7 @@ public class CartDAO {
         }
     }
     
-    /**
-     * 清空购物车
-     * @param username 用户名
-     */
+    /** 清空购物车 */
     public static void clearCart(String username) {
         String sql = "DELETE FROM cart WHERE username = ?";
         
@@ -150,11 +126,7 @@ public class CartDAO {
         }
     }
     
-    /**
-     * 计算购物车总价
-     * @param username 用户名
-     * @return 总价
-     */
+    /** 计算购物车总价 */
     public static double getTotalPrice(String username) {
         String sql = "SELECT SUM(price * quantity) as total FROM cart WHERE username = ?";
         
@@ -177,11 +149,7 @@ public class CartDAO {
         return 0.0;
     }
     
-    /**
-     * 获取购物车商品数量
-     * @param username 用户名
-     * @return 商品总数量
-     */
+    /** 获取购物车商品数量 */
     public static int getItemCount(String username) {
         String sql = "SELECT SUM(quantity) as count FROM cart WHERE username = ?";
         

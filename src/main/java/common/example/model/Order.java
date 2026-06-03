@@ -3,22 +3,17 @@ package common.example.model;
 import java.util.Date;
 import java.util.List;
 
-/**
- * 订单实体类
- */
 public class Order {
-    private String orderId;           // 订单ID
-    private String username;          // 用户名
-    private List<OrderItem> items;    // 订单商品列表
-    private double totalAmount;       // 订单总金额
-    private Date orderTime;           // 下单时间
-    private String status;            // 订单状态：待发货、已发货、已完成
+    private String orderId;
+    private String username;
+    private List<OrderItem> items;
+    private double totalAmount;
+    private Date orderTime;
+    private String status;
     
-    // 无参构造函数
     public Order() {
     }
     
-    // 全参构造函数
     public Order(String orderId, String username, List<OrderItem> items, double totalAmount, Date orderTime, String status) {
         this.orderId = orderId;
         this.username = username;
@@ -28,7 +23,6 @@ public class Order {
         this.status = status;
     }
     
-    // Getter 和 Setter 方法
     public String getOrderId() {
         return orderId;
     }

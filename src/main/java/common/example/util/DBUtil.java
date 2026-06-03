@@ -4,18 +4,13 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-/**
- * 数据库连接工具类
- */
 public class DBUtil {
     
-    // 数据库连接配置
     private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
     private static final String URL = "jdbc:mysql://localhost:3306/ecommerce_db?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8";
     private static final String USERNAME = "root";
-    private static final String PASSWORD = "123456"; // MySQL密码
+    private static final String PASSWORD = "123456";
     
-    // 静态加载驱动
     static {
         try {
             Class.forName(DRIVER);
@@ -26,16 +21,10 @@ public class DBUtil {
         }
     }
     
-    /**
-     * 获取数据库连接
-     * @return Connection对象
-     * @throws SQLException
-     */
+    /** 获取数据库连接 */
     public static Connection getConnection() throws SQLException {
         try {
             Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-            // 只在第一次连接时输出日志，避免日志过多
-            // System.out.println("[DBUtil] 数据库连接成功: " + URL);
             return conn;
         } catch (SQLException e) {
             System.err.println("[DBUtil] 数据库连接失败！");
@@ -50,10 +39,7 @@ public class DBUtil {
         }
     }
     
-    /**
-     * 关闭数据库连接
-     * @param conn Connection对象
-     */
+    /** 关闭数据库连接 */
     public static void close(Connection conn) {
         if (conn != null) {
             try {
@@ -63,21 +49,4 @@ public class DBUtil {
             }
         }
     }
-    
-    /**
-     * 测试数据库连接
-     */
-    public static void main(String[] args) {
-        Connection conn = null;
-        try {
-            conn = getConnection();
-            System.out.println("✅ 数据库连接测试成功！");
-        } catch (SQLException e) {
-            System.err.println("❌ 数据库连接测试失败: " + e.getMessage());
-            e.printStackTrace();
-        } finally {
-            close(conn);
-        }
-    }
-    
 }

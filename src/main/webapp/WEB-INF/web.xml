@@ -7,13 +7,6 @@
     
     <display-name>E-Commerce System</display-name>
     
-    <!-- 数据库自动初始化Servlet（最高优先级） -->
-    <servlet>
-        <servlet-name>DatabaseInitServlet</servlet-name>
-        <servlet-class>common.example.servlet.DatabaseInitServlet</servlet-class>
-        <load-on-startup>0</load-on-startup>
-    </servlet>
-    
     <!-- 配置欢迎页面，通过Servlet处理登录逻辑 -->
     <welcome-file-list>
         <welcome-file>login</welcome-file>

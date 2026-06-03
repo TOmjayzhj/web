@@ -9,14 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * 商品数据访问类 - 使用MySQL数据库
- */
 public class ProductDAOMySQL {
     
-    /**
-     * 根据分类获取商品列表
-     */
+    /** 根据分类获取商品 */
     public static List<Product> getProductsByCategory(String category) {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT id, name, category, icon, price FROM products WHERE category = ?";
@@ -51,9 +46,7 @@ public class ProductDAOMySQL {
         return products;
     }
     
-    /**
-     * 根据商品ID获取商品
-     */
+    /** 根据ID获取商品 */
     public static Product getProductById(String productId) {
         String sql = "SELECT id, name, category, icon, price FROM products WHERE id = ?";
         
@@ -87,9 +80,7 @@ public class ProductDAOMySQL {
         return null;
     }
     
-    /**
-     * 添加商品
-     */
+    /** 添加商品 */
     public static boolean addProduct(Product product) {
         String sql = "INSERT INTO products (id, name, category, icon, price) VALUES (?, ?, ?, ?, ?)";
         
@@ -117,9 +108,7 @@ public class ProductDAOMySQL {
         }
     }
     
-    /**
-     * 更新商品
-     */
+    /** 更新商品信息 */
     public static boolean updateProduct(String productId, String name, Double price, String icon) {
         StringBuilder sql = new StringBuilder("UPDATE products SET ");
         List<Object> params = new ArrayList<>();
@@ -137,7 +126,7 @@ public class ProductDAOMySQL {
             params.add(icon);
         }
         
-        // 移除最后的逗号和空格
+        // 无参数可更新
         if (params.isEmpty()) {
             return false;
         }
@@ -169,9 +158,7 @@ public class ProductDAOMySQL {
         }
     }
     
-    /**
-     * 删除商品
-     */
+    /** 删除商品 */
     public static boolean deleteProduct(String productId) {
         String sql = "DELETE FROM products WHERE id = ?";
         
@@ -195,9 +182,7 @@ public class ProductDAOMySQL {
         }
     }
     
-    /**
-     * 搜索商品（返回List）
-     */
+    /** 搜索商品 */
     public static List<Product> searchProducts(String keyword) {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT id, name, category, icon, price FROM products WHERE name LIKE ?";
@@ -232,9 +217,7 @@ public class ProductDAOMySQL {
         return products;
     }
     
-    /**
-     * 搜索商品（返回Map，兼容旧接口）
-     */
+    /** 搜索商品（返回Map） */
     public static Map<String, Object> searchProductsWithResult(String keyword) {
         Map<String, Object> result = new HashMap<>();
         List<Map<String, Object>> foundProducts = new ArrayList<>();
@@ -263,9 +246,7 @@ public class ProductDAOMySQL {
         return result;
     }
     
-    /**
-     * 统计商品被订购的总数量
-     */
+    /** 统计商品被订购次数 */
     public static int getProductOrderCount(String productId) {
         String sql = "SELECT COALESCE(SUM(quantity), 0) as total FROM order_items WHERE product_id = ?";
         
@@ -293,9 +274,6 @@ public class ProductDAOMySQL {
         return 0;
     }
     
-    /**
-     * 关闭资源
-     */
     private static void closeResource(PreparedStatement pstmt, ResultSet rs) {
         if (rs != null) {
             try {

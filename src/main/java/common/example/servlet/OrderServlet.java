@@ -17,9 +17,6 @@ import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-/**
- * 订单Servlet - 处理订单相关的HTTP请求
- */
 @WebServlet("/order")
 public class OrderServlet extends HttpServlet {
     
@@ -42,7 +39,7 @@ public class OrderServlet extends HttpServlet {
         String action = request.getParameter("action");
         
         if (action == null) {
-            action = "list"; // 默认查看订单列表
+            action = "list";
         }
         
         PrintWriter out = response.getWriter();
@@ -51,13 +48,11 @@ public class OrderServlet extends HttpServlet {
         if ("admin".equals(role)) {
             switch (action) {
                 case "list":
-                    // 获取所有订单
                     List<Order> allOrders = OrderDAO.getAllOrders();
                     out.print(convertOrdersToJson(allOrders));
                     break;
                     
                 case "count":
-                    // 获取订单总数
                     int allOrderCount = OrderDAO.getAllOrders().size();
                     out.print("{\"count\":" + allOrderCount + "}");
                     break;
@@ -73,11 +68,9 @@ public class OrderServlet extends HttpServlet {
         
         // 普通用户订单查询
         if (action.equals("list")) {
-            // 获取订单列表
             List<Order> orders = OrderDAO.getUserOrders(username);
             out.print(convertOrdersToJson(orders));
         } else if (action.equals("count")) {
-            // 获取订单数量
             int orderCount = OrderDAO.getUserOrders(username).size();
             out.print("{\"count\":" + orderCount + "}");
         } else {
@@ -118,7 +111,6 @@ public class OrderServlet extends HttpServlet {
         if ("admin".equals(role)) {
             switch (action) {
                 case "ship":
-                    // 发货
                     String orderId = request.getParameter("orderId");
                     if (orderId == null || orderId.isEmpty()) {
                         response.setStatus(400);
@@ -126,13 +118,11 @@ public class OrderServlet extends HttpServlet {
                         break;
                     }
                     
-                    // 更新订单状态为已发货
                     OrderDAO.updateOrderStatus(orderId, "已发货");
                     out.print("{\"success\":true,\"message\":\"发货成功\"}");
                     break;
                     
                 case "complete":
-                    // 完成订单
                     String completeOrderId = request.getParameter("orderId");
                     if (completeOrderId == null || completeOrderId.isEmpty()) {
                         response.setStatus(400);
@@ -140,7 +130,6 @@ public class OrderServlet extends HttpServlet {
                         break;
                     }
                     
-                    // 更新订单状态为已完成
                     OrderDAO.updateOrderStatus(completeOrderId, "已完成");
                     out.print("{\"success\":true,\"message\":\"订单已完成\"}");
                     break;
@@ -157,7 +146,6 @@ public class OrderServlet extends HttpServlet {
         // 普通用户订单操作
         switch (action) {
             case "checkout":
-                // 结算：将购物车商品转为订单
                 List<CartItem> cartItems = CartDAO.getCart(username);
                 
                 if (cartItems == null || cartItems.isEmpty()) {
@@ -166,11 +154,9 @@ public class OrderServlet extends HttpServlet {
                     break;
                 }
                 
-                // 创建订单
                 Order order = OrderDAO.createOrder(username, cartItems);
                 
                 if (order != null) {
-                    // 清空购物车
                     CartDAO.clearCart(username);
                     
                     out.print("{\"success\":true,\"message\":\"订单创建成功\",\"orderId\":\"" + order.getOrderId() + "\"}");
@@ -189,9 +175,7 @@ public class OrderServlet extends HttpServlet {
         out.flush();
     }
     
-    /**
-     * 将订单列表转换为JSON
-     */
+    /** 订单列表转JSON */
     private String convertOrdersToJson(List<Order> orders) {
         StringBuilder json = new StringBuilder();
         json.append("{");

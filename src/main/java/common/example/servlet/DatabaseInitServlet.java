@@ -9,14 +9,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-/**
- * 数据库自动初始化Servlet
- * 在项目启动时自动创建数据库、表和初始数据
- */
 @WebServlet(name = "DatabaseInitServlet", loadOnStartup = 0)
 public class DatabaseInitServlet extends HttpServlet {
     
-    // 数据库连接配置（不指定具体数据库）
     private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
     private static final String BASE_URL = "jdbc:mysql://localhost:3306/?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8";
     private static final String USERNAME = "root";
@@ -32,9 +27,7 @@ public class DatabaseInitServlet extends HttpServlet {
         try {
             // 加载驱动
             Class.forName(DRIVER);
-            System.out.println("[DatabaseInit] MySQL驱动加载成功");
             
-            // 执行初始化
             initializeDatabase();
             
             System.out.println("========================================");
@@ -49,37 +42,34 @@ public class DatabaseInitServlet extends HttpServlet {
         }
     }
     
-    /**
-     * 初始化数据库
-     */
+    /** 初始化数据库 */
     private void initializeDatabase() {
         Connection conn = null;
         Statement stmt = null;
         
         try {
-            // 1. 连接到MySQL服务器（不指定数据库）
+            // 连接MySQL
             conn = DriverManager.getConnection(BASE_URL, USERNAME, PASSWORD);
             stmt = conn.createStatement();
             
-            // 2. 创建数据库
+            // 创建数据库
             System.out.println("[DatabaseInit] 步骤1: 创建数据库 ecommerce_db...");
             stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS ecommerce_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
             System.out.println("[DatabaseInit] ✓ 数据库创建成功");
             
-            // 3. 使用数据库
             stmt.executeUpdate("USE ecommerce_db");
             
-            // 4. 创建数据表
+            // 创建数据表
             System.out.println("[DatabaseInit] 步骤2: 创建数据表...");
             createTables(stmt);
             System.out.println("[DatabaseInit] ✓ 数据表创建成功");
             
-            // 5. 插入初始数据
+            // 插入初始数据
             System.out.println("[DatabaseInit] 步骤3: 插入初始数据...");
             insertInitialData(stmt);
             System.out.println("[DatabaseInit] ✓ 初始数据插入成功");
             
-            // 6. 验证数据
+            // 验证数据
             System.out.println("[DatabaseInit] 步骤4: 验证数据...");
             verifyData(stmt);
             
@@ -96,11 +86,9 @@ public class DatabaseInitServlet extends HttpServlet {
         }
     }
     
-    /**
-     * 创建所有数据表
-     */
+    /** 创建数据表 */
     private void createTables(Statement stmt) throws SQLException {
-        // 1. 用户表
+        // 用户表
         stmt.executeUpdate("CREATE TABLE IF NOT EXISTS users (" +
                 "id INT AUTO_INCREMENT PRIMARY KEY COMMENT '自增ID'," +
                 "username VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名'," +
@@ -111,7 +99,7 @@ public class DatabaseInitServlet extends HttpServlet {
                 ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表'");
         System.out.println("  ✓ 创建 users 表");
         
-        // 2. 商品表
+        // 商品表
         stmt.executeUpdate("CREATE TABLE IF NOT EXISTS products (" +
                 "id VARCHAR(50) PRIMARY KEY COMMENT '商品ID'," +
                 "name VARCHAR(100) NOT NULL COMMENT '商品名称'," +
@@ -124,7 +112,7 @@ public class DatabaseInitServlet extends HttpServlet {
                 ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商品表'");
         System.out.println("  ✓ 创建 products 表");
         
-        // 3. 购物车表
+        // 购物车表
         stmt.executeUpdate("CREATE TABLE IF NOT EXISTS cart (" +
                 "id INT AUTO_INCREMENT PRIMARY KEY COMMENT '自增ID'," +
                 "username VARCHAR(50) NOT NULL COMMENT '用户名'," +
@@ -139,7 +127,7 @@ public class DatabaseInitServlet extends HttpServlet {
                 ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='购物车表'");
         System.out.println("  ✓ 创建 cart 表");
         
-        // 4. 订单表
+        // 订单表
         stmt.executeUpdate("CREATE TABLE IF NOT EXISTS orders (" +
                 "id VARCHAR(100) PRIMARY KEY COMMENT '订单ID'," +
                 "username VARCHAR(50) NOT NULL COMMENT '用户名'," +
@@ -151,7 +139,7 @@ public class DatabaseInitServlet extends HttpServlet {
                 ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单表'");
         System.out.println("  ✓ 创建 orders 表");
         
-        // 5. 订单详情表
+        // 订单详情表
         stmt.executeUpdate("CREATE TABLE IF NOT EXISTS order_items (" +
                 "id INT AUTO_INCREMENT PRIMARY KEY COMMENT '自增ID'," +
                 "order_id VARCHAR(100) NOT NULL COMMENT '订单ID'," +
@@ -165,7 +153,7 @@ public class DatabaseInitServlet extends HttpServlet {
                 ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单详情表'");
         System.out.println("  ✓ 创建 order_items 表");
         
-        // 6. 商品评价表
+        // 商品评价表
         stmt.executeUpdate("CREATE TABLE IF NOT EXISTS product_reviews (" +
                 "id INT AUTO_INCREMENT PRIMARY KEY COMMENT '评价ID'," +
                 "product_id VARCHAR(50) NOT NULL COMMENT '商品ID'," +
@@ -180,11 +168,9 @@ public class DatabaseInitServlet extends HttpServlet {
         System.out.println("  ✓ 创建 product_reviews 表");
     }
     
-    /**
-     * 插入初始数据
-     */
+    /** 插入初始数据 */
     private void insertInitialData(Statement stmt) throws SQLException {
-        // 1. 插入用户数据（如果不存在）
+        // 插入用户
         String checkUserCount = "SELECT COUNT(*) FROM users";
         java.sql.ResultSet rs = stmt.executeQuery(checkUserCount);
         rs.next();
@@ -201,7 +187,7 @@ public class DatabaseInitServlet extends HttpServlet {
             System.out.println("  ⊙ 用户数据已存在，跳过");
         }
         
-        // 2. 插入商品数据（如果不存在）
+        // 插入商品
         String checkProductCount = "SELECT COUNT(*) FROM products";
         rs = stmt.executeQuery(checkProductCount);
         rs.next();
@@ -257,9 +243,7 @@ public class DatabaseInitServlet extends HttpServlet {
         }
     }
     
-    /**
-     * 验证数据
-     */
+    /** 验证数据 */
     private void verifyData(Statement stmt) throws SQLException {
         java.sql.ResultSet rs;
         

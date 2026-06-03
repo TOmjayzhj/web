@@ -16,7 +16,6 @@ public class RegisterServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        // 显示注册页面
         request.getRequestDispatcher("/login.jsp").forward(request, response);
     }
     
@@ -31,7 +30,7 @@ public class RegisterServlet extends HttpServlet {
         String password = request.getParameter("password");
         String confirmPassword = request.getParameter("confirmPassword");
         
-        // 验证输入
+        // 参数验证
         if (username == null || username.trim().isEmpty()) {
             request.setAttribute("error", "用户名不能为空");
             request.setAttribute("showRegister", true);
@@ -62,11 +61,10 @@ public class RegisterServlet extends HttpServlet {
             return;
         }
         
-        // 注册用户（默认为普通用户角色）
+        // 注册用户
         boolean success = UserDAO.registerUser(username, password, User.ROLE_CUSTOMER);
         
         if (success) {
-            // 注册成功，重定向到登录页面
             response.sendRedirect(request.getContextPath() + "/login?register=success");
         } else {
             request.setAttribute("error", "注册失败，请稍后重试");

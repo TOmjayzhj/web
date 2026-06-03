@@ -14,9 +14,6 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 
-/**
- * 商品Servlet - 处理商品相关的HTTP请求
- */
 @WebServlet("/products")
 public class ProductServlet extends HttpServlet {
     
@@ -24,16 +21,14 @@ public class ProductServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
-        // 设置请求和响应的字符编码
         request.setCharacterEncoding("UTF-8");
         
-        // 检查是否是管理员请求
         String action = request.getParameter("action");
         HttpSession session = request.getSession();
         String role = (String) session.getAttribute("role");
         boolean isAdmin = "admin".equals(role);
         
-        // 处理获取商品详情
+        // 获取商品详情
         if ("getDetail".equals(action)) {
             response.setContentType("application/json;charset=UTF-8");
             handleGetProductDetail(request, response);
@@ -47,13 +42,11 @@ public class ProductServlet extends HttpServlet {
             return;
         }
         
-        // 普通用户请求
         response.setContentType("application/json;charset=UTF-8");
         
-        // 获取搜索关键词
         String keyword = request.getParameter("keyword");
         
-        // 如果有搜索关键词，执行搜索
+        // 搜索商品
         if (keyword != null && !keyword.trim().isEmpty()) {
             Map<String, Object> searchResult = ProductDAOMySQL.searchProductsWithResult(keyword.trim());
             String json = convertSearchResultToJson(searchResult, keyword);
@@ -63,21 +56,14 @@ public class ProductServlet extends HttpServlet {
             return;
         }
         
-        // 获取分类参数
         String category = request.getParameter("category");
         
-        // 如果没有指定分类，默认返回手机数码
         if (category == null || category.trim().isEmpty()) {
             category = "phone";
         }
         
-        // 从数据库获取商品数据
         List<Product> products = ProductDAOMySQL.getProductsByCategory(category);
-        
-        // 将商品数据转换为JSON格式
         String json = convertProductsToJson(products, category, isAdmin);
-        
-        // 返回JSON数据
         PrintWriter out = response.getWriter();
         out.print(json);
         out.flush();
@@ -93,7 +79,7 @@ public class ProductServlet extends HttpServlet {
         HttpSession session = request.getSession();
         String role = (String) session.getAttribute("role");
         
-        // 只有管理员可以执行POST操作
+        // 仅管理员可执行POST
         if (!"admin".equals(role)) {
             PrintWriter out = response.getWriter();
             out.print("{\"success\":false,\"error\":\"权限不足\"}");
@@ -116,9 +102,7 @@ public class ProductServlet extends HttpServlet {
         }
     }
     
-    /**
-     * 处理获取商品详情
-     */
+    /** 获取商品详情 */
     private void handleGetProductDetail(HttpServletRequest request, HttpServletResponse response) 
             throws IOException {
         String productId = request.getParameter("productId");
@@ -149,9 +133,7 @@ public class ProductServlet extends HttpServlet {
         out.flush();
     }
     
-    /**
-     * 处理管理员请求（返回包含订单数量的商品数据）
-     */
+    /** 管理员请求（含订单数量） */
     private void handleAdminRequest(HttpServletRequest request, HttpServletResponse response) 
             throws IOException {
         String category = request.getParameter("category");
@@ -167,9 +149,7 @@ public class ProductServlet extends HttpServlet {
         out.flush();
     }
     
-    /**
-     * 处理添加商品
-     */
+    /** 添加商品 */
     private void handleAddProduct(HttpServletRequest request, HttpServletResponse response) 
             throws IOException {
         String id = request.getParameter("id");
@@ -197,9 +177,7 @@ public class ProductServlet extends HttpServlet {
         }
     }
     
-    /**
-     * 处理更新商品
-     */
+    /** 更新商品 */
     private void handleUpdateProduct(HttpServletRequest request, HttpServletResponse response) 
             throws IOException {
         String productId = request.getParameter("productId");
@@ -225,9 +203,7 @@ public class ProductServlet extends HttpServlet {
         }
     }
     
-    /**
-     * 处理删除商品
-     */
+    /** 删除商品 */
     private void handleDeleteProduct(HttpServletRequest request, HttpServletResponse response) 
             throws IOException {
         String productId = request.getParameter("productId");
@@ -243,9 +219,6 @@ public class ProductServlet extends HttpServlet {
         out.flush();
     }
     
-    /**
-     * 转义JSON特殊字符
-     */
     private String escapeJson(String text) {
         if (text == null) return "";
         return text.replace("\\", "\\\\")
@@ -255,9 +228,7 @@ public class ProductServlet extends HttpServlet {
                   .replace("\t", "\\t");
     }
     
-    /**
-     * 将商品列表转换为JSON字符串
-     */
+    /** 商品列表转JSON */
     private String convertProductsToJson(List<Product> products, String category, boolean isAdmin) {
         StringBuilder json = new StringBuilder();
         json.append("{");
@@ -272,7 +243,7 @@ public class ProductServlet extends HttpServlet {
             json.append("\"icon\":\"").append(product.getIcon()).append("\",");
             json.append("\"price\":").append(product.getPrice());
             
-            // 如果是管理员，添加订单数量
+            // 管理员添加订单数量
             if (isAdmin) {
                 int orderCount = ProductDAOMySQL.getProductOrderCount(product.getId());
                 json.append(",\"orderCount\":").append(orderCount);
@@ -280,7 +251,6 @@ public class ProductServlet extends HttpServlet {
             
             json.append("}");
             
-            // 如果不是最后一个元素，添加逗号
             if (i < products.size() - 1) {
                 json.append(",");
             }
@@ -292,9 +262,7 @@ public class ProductServlet extends HttpServlet {
         return json.toString();
     }
     
-    /**
-     * 将搜索结果转换为JSON字符串
-     */
+    /** 搜索结果转JSON */
     @SuppressWarnings("unchecked")
     private String convertSearchResultToJson(Map<String, Object> searchResult, String keyword) {
         StringBuilder json = new StringBuilder();
@@ -317,7 +285,6 @@ public class ProductServlet extends HttpServlet {
             json.append("\"category\":\"").append(product.get("category")).append("\"");
             json.append("}");
             
-            // 如果不是最后一个元素，添加逗号
             if (i < products.size() - 1) {
                 json.append(",");
             }

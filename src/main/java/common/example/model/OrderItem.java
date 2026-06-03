@@ -1,20 +1,15 @@
 package common.example.model;
 
-/**
- * 订单项实体类
- */
 public class OrderItem {
-    private String productId;    // 商品ID
-    private String productName;  // 商品名称
-    private String icon;         // 商品图标
-    private double price;        // 商品单价
-    private int quantity;        // 购买数量
+    private String productId;
+    private String productName;
+    private String icon;
+    private double price;
+    private int quantity;
     
-    // 无参构造函数
     public OrderItem() {
     }
     
-    // 全参构造函数
     public OrderItem(String productId, String productName, String icon, double price, int quantity) {
         this.productId = productId;
         this.productName = productName;
@@ -23,12 +18,10 @@ public class OrderItem {
         this.quantity = quantity;
     }
     
-    // 计算小计
     public double getSubtotal() {
         return price * quantity;
     }
     
-    // Getter 和 Setter 方法
     public String getProductId() {
         return productId;
     }
