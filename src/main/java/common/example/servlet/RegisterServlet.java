@@ -16,7 +16,7 @@ public class RegisterServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        request.getRequestDispatcher("/login.jsp").forward(request, response);
+        response.sendRedirect(request.getContextPath() + "/login");
     }
     
     @Override
@@ -34,21 +34,21 @@ public class RegisterServlet extends HttpServlet {
         if (username == null || username.trim().isEmpty()) {
             request.setAttribute("error", "用户名不能为空");
             request.setAttribute("showRegister", true);
-            request.getRequestDispatcher("/login.jsp").forward(request, response);
+            request.getRequestDispatcher("/login").forward(request, response);
             return;
         }
         
         if (password == null || password.trim().isEmpty()) {
             request.setAttribute("error", "密码不能为空");
             request.setAttribute("showRegister", true);
-            request.getRequestDispatcher("/login.jsp").forward(request, response);
+            request.getRequestDispatcher("/login").forward(request, response);
             return;
         }
         
         if (!password.equals(confirmPassword)) {
             request.setAttribute("error", "两次输入的密码不一致");
             request.setAttribute("showRegister", true);
-            request.getRequestDispatcher("/login.jsp").forward(request, response);
+            request.getRequestDispatcher("/login").forward(request, response);
             return;
         }
         
@@ -57,7 +57,7 @@ public class RegisterServlet extends HttpServlet {
         if (existingUser != null) {
             request.setAttribute("error", "用户名已存在");
             request.setAttribute("showRegister", true);
-            request.getRequestDispatcher("/login.jsp").forward(request, response);
+            request.getRequestDispatcher("/login").forward(request, response);
             return;
         }
         
@@ -69,7 +69,7 @@ public class RegisterServlet extends HttpServlet {
         } else {
             request.setAttribute("error", "注册失败，请稍后重试");
             request.setAttribute("showRegister", true);
-            request.getRequestDispatcher("/login.jsp").forward(request, response);
+            request.getRequestDispatcher("/login").forward(request, response);
         }
     }
 }

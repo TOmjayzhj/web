@@ -135,6 +135,38 @@ public class ProductReviewDAO {
         return false;
     }
     
+    /** 获取用户的所有评价 */
+    public static List<ProductReview> getReviewsByUsername(String username) {
+        List<ProductReview> reviews = new ArrayList<>();
+        String sql = "SELECT id, product_id, username, rating, content, review_time FROM product_reviews WHERE username = ? ORDER BY review_time DESC";
+        
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, username);
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    ProductReview review = new ProductReview(
+                        rs.getInt("id"),
+                        rs.getString("product_id"),
+                        rs.getString("username"),
+                        rs.getInt("rating"),
+                        rs.getString("content"),
+                        rs.getTimestamp("review_time")
+                    );
+                    reviews.add(review);
+                }
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("[ProductReviewDAO] 获取用户评价失败: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return reviews;
+    }
+    
     /** 删除评价 */
     public static boolean deleteReview(int reviewId) {
         String sql = "DELETE FROM product_reviews WHERE id = ?";

@@ -1,4 +1,12 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%
+    // 防护：禁止直接访问 login.jsp，必须通过 /login Servlet 统一入口
+    if (request.getAttribute("jakarta.servlet.forward.servlet_path") == null
+        && request.getAttribute("jakarta.servlet.include.servlet_path") == null) {
+        response.sendRedirect(request.getContextPath() + "/login");
+        return;
+    }
+%>
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -180,7 +188,8 @@
             document.getElementById('formSubtitle').textContent = '创建新账号，开始您的购物之旅';
             document.getElementById('loginLink').classList.add('hidden');
             document.getElementById('registerLink').classList.remove('hidden');
-            document.getElementById('accountInfo').classList.add('hidden');
+            var accountInfo = document.getElementById('accountInfo');
+            if (accountInfo) accountInfo.classList.add('hidden');
         }
         
         function showLogin() {
@@ -190,7 +199,8 @@
             document.getElementById('formSubtitle').textContent = '欢迎回来，请登录您的账号';
             document.getElementById('loginLink').classList.remove('hidden');
             document.getElementById('registerLink').classList.add('hidden');
-            document.getElementById('accountInfo').classList.remove('hidden');
+            var accountInfo = document.getElementById('accountInfo');
+            if (accountInfo) accountInfo.classList.remove('hidden');
         }
         
         // 如果有注册相关错误，自动显示注册表单

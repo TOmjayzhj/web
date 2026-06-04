@@ -28,6 +28,67 @@
             transition: background-color 0.15s;
         }
         .add-product-btn:hover { background-color: #219a52; }
+        
+        /* 用户管理页面 */
+        .user-management { display: none; }
+        .user-management.active { display: block; }
+        
+        .user-table {
+            background-color: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+        .user-table table { width: 100%; border-collapse: collapse; }
+        .user-table th {
+            background-color: #1e293b;
+            color: white;
+            padding: 11px 14px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .user-table td {
+            padding: 11px 14px;
+            border-bottom: 1px solid #f1f2f6;
+            font-size: 13px;
+            color: #2d3436;
+        }
+        .user-table tr:hover { background-color: #f8fafc; }
+        .user-table tr:last-child td { border-bottom: none; }
+        
+        .role-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .role-admin { background-color: #fce4ec; color: #c62828; }
+        .role-customer { background-color: #e8f5e9; color: #2e7d32; }
+        
+        .role-select {
+            padding: 5px 8px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 5px;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+        }
+        .role-select:focus { border-color: #4a90d9; }
+        
+        .view-reviews-btn {
+            padding: 5px 10px;
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: opacity 0.15s;
+        }
+        .view-reviews-btn:hover { opacity: 0.85; }
     </style>
 </head>
 <body>
@@ -70,7 +131,8 @@
             <div class="nav-title">管理菜单</div>
             <a href="#" class="nav-item active" data-section="product">商品管理</a>
             <a href="#" class="nav-item" data-section="order">订单管理</a>
-            <div class="nav-section-label">商品分类</div>
+            <a href="#" class="nav-item" data-section="user">用户管理</a>
+            <div class="nav-title" style="margin-top: 12px;">商品分类</div>
             <a href="#" class="nav-item" data-category="phone">手机数码</a>
             <a href="#" class="nav-item" data-category="computer">电脑办公</a>
             <a href="#" class="nav-item" data-category="home">家居家装</a>
@@ -93,6 +155,29 @@
                 </div>
                 <div class="product-grid" id="productGrid">
                     <!-- 商品会通过JavaScript动态加载 -->
+                </div>
+            </div>
+            
+            <!-- 用户管理区域 -->
+            <div class="user-management" id="userManagement">
+                <div class="content-header">
+                    <h2>用户管理</h2>
+                </div>
+                <div class="user-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>用户名</th>
+                                <th>当前权限</th>
+                                <th>订单数量</th>
+                                <th>消费金额</th>
+                                <th>评价数量</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody">
+                        </tbody>
+                    </table>
                 </div>
             </div>
             
@@ -474,6 +559,7 @@
         // 关闭评价模态框
         function closeReviewModal() {
             document.getElementById('reviewModal').classList.remove('show');
+            document.getElementById('reviewSummary').style.display = '';
         }
         
         // 加载评价数据
@@ -746,14 +832,18 @@
         function switchSection(section) {
             currentSection = section;
             
+            document.getElementById('productManagement').classList.add('hidden');
+            document.getElementById('orderManagement').classList.remove('active');
+            document.getElementById('userManagement').classList.remove('active');
+            
             if (section === 'product') {
                 document.getElementById('productManagement').classList.remove('hidden');
-                document.getElementById('orderManagement').classList.remove('active');
             } else if (section === 'order') {
-                document.getElementById('productManagement').classList.add('hidden');
                 document.getElementById('orderManagement').classList.add('active');
-                // 加载订单数据
                 loadOrders();
+            } else if (section === 'user') {
+                document.getElementById('userManagement').classList.add('active');
+                loadUsers();
             }
         }
         
@@ -853,6 +943,141 @@
                     }
                     showToast('✗ 搜索失败', 'error');
                 });
+        }
+        
+        // ==============================
+        // 用户管理相关函数
+        // ==============================
+        
+        // 加载用户列表
+        function loadUsers() {
+            var contextPath = '${pageContext.request.contextPath}';
+            fetch(contextPath + '/user_manage?action=list')
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    renderUserTable(data.users);
+                })
+                .catch(function(error) {
+                    console.error('加载用户失败:', error);
+                    showToast('✗ 加载用户列表失败', 'error');
+                });
+        }
+        
+        // 渲染用户表格
+        function renderUserTable(users) {
+            var tbody = document.getElementById('userTableBody');
+            if (!users || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#b2bec3;padding:40px;">暂无用户</td></tr>';
+                return;
+            }
+            
+            var currentUser = '${sessionScope.username}';
+            var html = '';
+            for (var i = 0; i < users.length; i++) {
+                var u = users[i];
+                var roleBadgeClass = u.role === 'admin' ? 'role-admin' : 'role-customer';
+                var roleLabel = u.role === 'admin' ? '管理员' : '普通用户';
+                var isSelf = u.username === currentUser;
+                
+                html += '<tr>';
+                html += '  <td><strong>' + escapeHtml(u.username) + '</strong>' + (isSelf ? ' <span style="color:#4a90d9;font-size:11px;">(我)</span>' : '') + '</td>';
+                html += '  <td><span class="role-badge ' + roleBadgeClass + '">' + roleLabel + '</span></td>';
+                html += '  <td>' + u.orderCount + ' 单</td>';
+                html += '  <td>￥' + parseFloat(u.totalSpending).toFixed(2) + '</td>';
+                html += '  <td>' + u.reviewCount + ' 条</td>';
+                html += '  <td style="display:flex;gap:6px;align-items:center;">';
+                if (!isSelf) {
+                    var otherRole = u.role === 'admin' ? 'customer' : 'admin';
+                    var otherRoleLabel = otherRole === 'admin' ? '设为管理员' : '设为普通用户';
+                    html += '<button class="ship-btn" onclick="updateUserRole(\'' + escapeHtml(u.username) + '\', \'' + otherRole + '\')">' + otherRoleLabel + '</button>';
+                } else {
+                    html += '<span style="color:#b2bec3;font-size:12px;">不可修改</span>';
+                }
+                html += '  <button class="view-reviews-btn" onclick="showUserReviews(\'' + escapeHtml(u.username) + '\')">查看评价</button>';
+                html += '  </td>';
+                html += '</tr>';
+            }
+            tbody.innerHTML = html;
+        }
+        
+        // 修改用户权限
+        function updateUserRole(username, newRole) {
+            var roleLabel = newRole === 'admin' ? '管理员' : '普通用户';
+            if (!confirm('确定要将用户 "' + username + '" 设为 ' + roleLabel + ' 吗？')) return;
+            
+            var contextPath = '${pageContext.request.contextPath}';
+            var params = new URLSearchParams();
+            params.append('action', 'update_role');
+            params.append('username', username);
+            params.append('newRole', newRole);
+            
+            fetch(contextPath + '/user_manage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString()
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    showToast('✓ ' + data.message, 'success');
+                    loadUsers();
+                } else {
+                    showToast('✗ ' + (data.error || '修改失败'), 'error');
+                }
+            })
+            .catch(function(error) {
+                console.error('修改权限失败:', error);
+                showToast('✗ 修改权限失败', 'error');
+            });
+        }
+        
+        // 查看用户评价（弹出模态框）
+        function showUserReviews(username) {
+            document.getElementById('reviewModalTitle').textContent = '用户评价 - ' + username;
+            document.getElementById('reviewModal').classList.add('show');
+            // 隐藏评价摘要（用户评价模式不需要商品评分汇总）
+            document.getElementById('reviewSummary').style.display = 'none';
+            
+            var contextPath = '${pageContext.request.contextPath}';
+            fetch(contextPath + '/user_manage?action=reviews&username=' + encodeURIComponent(username))
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        renderUserReviewsList(data.reviews);
+                    } else {
+                        showToast('✗ 加载评价失败', 'error');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('加载用户评价失败:', error);
+                    showToast('✗ 加载评价失败', 'error');
+                });
+        }
+        
+        // 渲染用户评价列表（在模态框中）
+        function renderUserReviewsList(reviews) {
+            var reviewList = document.getElementById('reviewList');
+            if (!reviews || reviews.length === 0) {
+                reviewList.innerHTML = '<div class="no-reviews">该用户暂无评价</div>';
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < reviews.length; i++) {
+                var r = reviews[i];
+                var stars = '';
+                for (var s = 0; s < r.rating; s++) stars += '★';
+                for (var s2 = 0; s2 < 5 - r.rating; s2++) stars += '☆';
+                
+                html += '<div class="review-item">';
+                html += '  <div class="review-header">';
+                html += '    <span style="font-size:12px;color:#636e72;">商品: ' + escapeHtml(r.productId) + '</span>';
+                html += '    <span class="review-time">' + r.reviewTime + '</span>';
+                html += '  </div>';
+                html += '  <div class="review-rating">' + stars + '</div>';
+                html += '  <div class="review-content">' + escapeHtml(r.content) + '</div>';
+                html += '</div>';
+            }
+            reviewList.innerHTML = html;
         }
         
         // 页面加载
