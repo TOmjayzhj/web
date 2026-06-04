@@ -19,214 +19,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css">
     <title>我的订单</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-        }
-        
-        .header {
-            background-color: #ffffff;
-            padding: 20px 30px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        
-        .header-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .header-btn {
-            padding: 10px 20px;
-            background-color: #3498db;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .header-btn:hover {
-            background-color: #2980b9;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
-        
-        .header-btn.primary {
-            background-color: #27ae60;
-        }
-        
-        .header-btn.primary:hover {
-            background-color: #229954;
-        }
-        
+        /* 页面特定样式 - 订单页使用单列布局 */
         .container {
+            display: block;
             max-width: 1200px;
             margin: 30px auto;
             padding: 0 20px;
         }
-        
+        .header-actions { display: flex; gap: 10px; }
+        .header-btn {
+            padding: 9px 18px;
+            background-color: #4a90d9;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.15s;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .header-btn:hover {
+            background-color: #357abd;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+        .header-btn.primary { background-color: #27ae60; }
+        .header-btn.primary:hover { background-color: #219a52; }
         .order-header {
             background-color: white;
             padding: 20px;
-            border-radius: 8px;
+            border-radius: 10px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
         }
-        
-        .order-header h2 {
-            color: #2c3e50;
-            font-size: 24px;
-        }
-        
-        .order-list {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
+        .order-header h2 { color: #2d3436; font-size: 22px; font-weight: 600; }
+        .order-list { display: flex; flex-direction: column; gap: 16px; }
         .order-card {
             background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
             overflow: hidden;
         }
-        
         .order-info {
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #eee;
+            padding: 18px 20px;
+            background-color: #f8fafc;
+            border-bottom: 1px solid #f1f2f6;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
-        .order-meta {
-            display: flex;
-            gap: 30px;
-        }
-        
-        .meta-item {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .meta-label {
-            font-size: 12px;
-            color: #999;
-            margin-bottom: 5px;
-        }
-        
-        .meta-value {
-            font-size: 14px;
-            color: #333;
-            font-weight: bold;
-        }
-        
+        .order-meta { display: flex; gap: 28px; }
+        .meta-item { display: flex; flex-direction: column; }
+        .meta-label { font-size: 12px; color: #b2bec3; margin-bottom: 4px; }
+        .meta-value { font-size: 14px; color: #2d3436; font-weight: 600; }
         .order-status {
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 600;
         }
-        
-        .status-pending {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-shipped {
-            background-color: #d1ecf1;
-            color: #0c5460;
-        }
-        
-        .status-completed {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        
-        .order-items {
-            padding: 20px;
-        }
-        
+        .status-pending { background-color: #fef3cd; color: #856404; }
+        .status-shipped { background-color: #d1ecf1; color: #0c5460; }
+        .status-completed { background-color: #d4edda; color: #155724; }
+        .order-items { padding: 18px 20px; }
         .order-item {
             display: grid;
             grid-template-columns: 60px 1fr 100px 80px 100px;
-            gap: 15px;
+            gap: 14px;
             align-items: center;
-            padding: 15px 0;
-            border-bottom: 1px solid #eee;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f2f6;
         }
-        
-        .order-item:last-child {
-            border-bottom: none;
-        }
-        
-        .item-icon {
-            font-size: 36px;
-            text-align: center;
-        }
-        
-        .item-name {
-            font-size: 14px;
-            color: #333;
-        }
-        
-        .item-price {
-            color: #e74c3c;
-            font-weight: bold;
-        }
-        
-        .item-quantity {
-            text-align: center;
-            color: #666;
-        }
-        
-        .item-subtotal {
-            color: #e74c3c;
-            font-weight: bold;
-            text-align: right;
-        }
-        
+        .order-item:last-child { border-bottom: none; }
+        .item-icon { font-size: 32px; text-align: center; }
+        .item-name { font-size: 14px; color: #2d3436; }
+        .item-price { color: #e74c3c; font-weight: 600; }
+        .item-quantity { text-align: center; color: #636e72; }
+        .item-subtotal { color: #e74c3c; font-weight: 600; text-align: right; }
         .order-total {
-            padding: 20px;
-            background-color: #f8f9fa;
+            padding: 18px 20px;
+            background-color: #f8fafc;
             text-align: right;
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 17px;
+            font-weight: 700;
             color: #e74c3c;
         }
-        
-        .empty-orders {
-            text-align: center;
-            padding: 60px 20px;
-            color: #999;
-            font-size: 18px;
-        }
-        
-        .empty-icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-        }
+        .empty-orders { text-align: center; padding: 50px 20px; color: #b2bec3; font-size: 16px; }
+        .empty-icon { font-size: 64px; margin-bottom: 16px; }
     </style>
 </head>
 <body>

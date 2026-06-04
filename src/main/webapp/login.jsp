@@ -5,16 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css">
     <title>用户登录</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        /* 登录页特有样式 - 全屏背景 */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: url('${pageContext.request.contextPath}/images/25815908_002835219086_2.jpg') no-repeat center center fixed;
             background-size: cover;
             display: flex;
@@ -22,155 +17,92 @@
             align-items: center;
             min-height: 100vh;
         }
-        
-        /* 背景遮罩层，让表单更易阅读 */
         body::before {
             content: '';
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(44, 62, 80, 0.45);
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(30, 41, 59, 0.45);
             z-index: 0;
         }
-        
         .login-container {
             position: relative;
             z-index: 1;
             background-color: rgba(255, 255, 255, 0.97);
-            padding: 40px 35px 30px;
-            border-radius: 8px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            padding: 36px 32px 28px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
             width: 380px;
             transition: box-shadow 0.2s;
         }
-        
         .login-container:hover {
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
         }
-        
-        .login-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .login-header .logo-icon {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-        
-        h2 {
-            text-align: center;
-            color: #2c3e50;
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-        
-        .login-subtitle {
-            text-align: center;
-            color: #7f8c8d;
-            font-size: 14px;
-        }
-        
-        .form-group {
-            margin-bottom: 18px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 6px;
-            color: #2c3e50;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
+        .login-header { text-align: center; margin-bottom: 24px; }
+        .login-header .logo-icon { font-size: 42px; margin-bottom: 8px; }
+        h2 { text-align: center; color: #2d3436; font-size: 22px; margin-bottom: 4px; font-weight: 600; }
+        .login-subtitle { text-align: center; color: #636e72; font-size: 13px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 5px; color: #2d3436; font-size: 13px; font-weight: 600; }
         input[type="text"],
         input[type="password"] {
             width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            box-sizing: border-box;
+            padding: 10px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
             font-size: 14px;
             font-family: inherit;
             outline: none;
-            transition: border-color 0.3s;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
-        
         input[type="text"]:focus,
         input[type="password"]:focus {
-            border-color: #3498db;
+            border-color: #4a90d9;
+            box-shadow: 0 0 0 3px rgba(74,144,217,0.1);
         }
-        
         .error-message {
             color: #e74c3c;
-            background-color: #ffeaea;
+            background-color: #fef2f2;
             text-align: center;
-            margin-bottom: 18px;
-            padding: 10px 15px;
-            border-radius: 6px;
-            font-size: 14px;
+            margin-bottom: 14px;
+            padding: 9px 14px;
+            border-radius: 8px;
+            font-size: 13px;
         }
-        
         .success-message {
             color: #27ae60;
-            background-color: #eafff1;
+            background-color: #f0fdf4;
             text-align: center;
-            margin-bottom: 18px;
-            padding: 10px 15px;
-            border-radius: 6px;
-            font-size: 14px;
+            margin-bottom: 14px;
+            padding: 9px 14px;
+            border-radius: 8px;
+            font-size: 13px;
         }
-        
         button {
             width: 100%;
-            padding: 12px;
-            background-color: #3498db;
+            padding: 11px;
+            background-color: #4a90d9;
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 15px;
             font-family: inherit;
             font-weight: 600;
-            transition: background-color 0.2s;
-            margin-top: 5px;
+            transition: background-color 0.15s;
+            margin-top: 4px;
         }
-        
-        button:hover {
-            background-color: #2980b9;
-        }
-        
-        .toggle-link {
-            text-align: center;
-            margin-top: 20px;
-            color: #7f8c8d;
-            font-size: 14px;
-        }
-        
-        .toggle-link a {
-            color: #3498db;
-            text-decoration: none;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        
-        .toggle-link a:hover {
-            color: #2980b9;
-            text-decoration: underline;
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
+        button:hover { background-color: #357abd; }
+        .toggle-link { text-align: center; margin-top: 18px; color: #636e72; font-size: 13px; }
+        .toggle-link a { color: #4a90d9; text-decoration: none; cursor: pointer; font-weight: 600; }
+        .toggle-link a:hover { color: #357abd; text-decoration: underline; }
+        .hidden { display: none; }
         .account-info {
             text-align: center;
-            margin-top: 20px;
-            padding-top: 18px;
-            border-top: 1px solid #e0e0e0;
-            color: #7f8c8d;
+            margin-top: 18px;
+            padding-top: 16px;
+            border-top: 1px solid #f1f2f6;
+            color: #636e72;
             font-size: 12px;
             line-height: 1.8;
         }

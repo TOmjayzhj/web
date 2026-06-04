@@ -5,271 +5,140 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css">
     <title>商品详情</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Microsoft YaHei', Arial, sans-serif;
-            background-color: #e8e8e8;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
+        /* 页面特定样式 - 商品详情页单列布局 */
+        body { min-height: 100vh; padding: 20px; }
+        .container { display: block; max-width: 1000px; margin: 0 auto; }
         .back-btn {
             display: inline-block;
             padding: 8px 16px;
-            background: #f0f0f0;
-            color: #333;
+            background: #f1f2f6;
+            color: #636e72;
             text-decoration: none;
-            border-radius: 4px;
+            border-radius: 6px;
             margin-bottom: 20px;
-            font-weight: normal;
-            transition: background-color 0.2s;
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.15s;
         }
-        
-        .back-btn:hover {
-            background: #e0e0e0;
-        }
-        
+        .back-btn:hover { background: #dfe4ea; color: #2d3436; }
         .product-card {
             background: white;
-            padding: 30px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 28px;
+            border-radius: 10px;
+            margin-bottom: 18px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
         }
-        
-        .product-header {
-            display: flex;
-            gap: 30px;
-            align-items: center;
-        }
-        
+        .product-header { display: flex; gap: 28px; align-items: center; }
         .product-icon {
-            font-size: 80px;
-            width: 120px;
-            height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f5f5f5;
-            border-radius: 8px;
+            font-size: 64px;
+            width: 110px; height: 110px;
+            display: flex; align-items: center; justify-content: center;
+            background: #f8fafc;
+            border-radius: 10px;
+            border: 1px solid #f1f2f6;
         }
-        
-        .product-info h1 {
-            font-size: 28px;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .product-info .price {
-            font-size: 32px;
-            color: #e74c3c;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
-        .product-info .category {
-            color: #666;
-            font-size: 16px;
-        }
-        
+        .product-info h1 { font-size: 24px; color: #2d3436; margin-bottom: 8px; font-weight: 600; }
+        .product-info .price { font-size: 28px; color: #e74c3c; font-weight: 700; margin-bottom: 8px; }
+        .product-info .category { color: #636e72; font-size: 14px; }
         .rating-section {
-            background: #f0f0f0;
+            background: #f8fafc;
             padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            border-radius: 10px;
+            margin-bottom: 18px;
+            border: 1px solid #f1f2f6;
         }
-        
         .rating-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
-        
-        .rating-summary {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .avg-rating {
-            font-size: 48px;
-            font-weight: bold;
-            color: #f39c12;
-        }
-        
-        .stars {
-            font-size: 24px;
-            color: #f39c12;
-        }
-        
-        .review-count {
-            color: #666;
-            font-size: 16px;
-        }
-        
-        .reviews-list {
-            margin-top: 20px;
-        }
-        
+        .rating-summary { display: flex; align-items: center; gap: 14px; }
+        .avg-rating { font-size: 42px; font-weight: 700; color: #f39c12; }
+        .stars { font-size: 22px; color: #f39c12; }
+        .review-count { color: #636e72; font-size: 14px; }
+        .reviews-list { margin-top: 18px; }
         .review-item {
             background: white;
-            padding: 20px;
+            padding: 18px;
             border-radius: 8px;
-            margin-bottom: 15px;
-            border-left: 4px solid #667eea;
+            margin-bottom: 12px;
+            border-left: 3px solid #4a90d9;
         }
-        
         .review-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
-        }
-        
-        .review-username {
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .review-time {
-            color: #999;
-            font-size: 14px;
-        }
-        
-        .review-rating {
-            color: #f39c12;
             margin-bottom: 8px;
         }
-        
-        .review-content {
-            color: #555;
-            line-height: 1.6;
-        }
-        
-        .no-reviews {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-            font-size: 16px;
-        }
-        
+        .review-username { font-weight: 600; color: #2d3436; font-size: 13px; }
+        .review-time { color: #b2bec3; font-size: 12px; }
+        .review-rating { color: #f39c12; margin-bottom: 6px; font-size: 14px; }
+        .review-content { color: #636e72; line-height: 1.6; font-size: 13px; }
+        .no-reviews { text-align: center; padding: 36px; color: #b2bec3; font-size: 14px; }
         .review-form {
-            background: #f0f0f0;
+            background: #f8fafc;
             padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
+            border-radius: 10px;
+            margin-top: 18px;
+            border: 1px solid #f1f2f6;
         }
-        
-        .review-form h3 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: bold;
-        }
-        
-        .star-rating {
-            display: flex;
-            gap: 10px;
-            font-size: 32px;
-        }
-        
-        .star-rating input {
-            display: none;
-        }
-        
-        .star-rating label {
-            cursor: pointer;
-            color: #ddd;
-            transition: color 0.2s;
-        }
-        
+        .review-form h3 { margin-bottom: 16px; color: #2d3436; font-size: 16px; font-weight: 600; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; color: #636e72; font-weight: 500; font-size: 13px; }
+        .star-rating { display: flex; gap: 8px; font-size: 28px; }
+        .star-rating input { display: none; }
+        .star-rating label { cursor: pointer; color: #dfe4ea; transition: color 0.15s; }
         .star-rating label:hover,
         .star-rating label:hover ~ label,
-        .star-rating input:checked ~ label {
-            color: #f39c12;
-        }
-        
+        .star-rating input:checked ~ label { color: #f39c12; }
         .form-group textarea {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
+            padding: 10px 12px;
+            border: 1.5px solid #e2e8f0;
             border-radius: 8px;
             font-size: 14px;
             resize: vertical;
             min-height: 100px;
             font-family: inherit;
-        }
-        
-        .form-group textarea:focus {
             outline: none;
-            border-color: #667eea;
+            transition: border-color 0.2s;
         }
-        
+        .form-group textarea:focus { border-color: #4a90d9; }
         .submit-btn {
-            padding: 10px 30px;
-            background: #666;
+            padding: 9px 24px;
+            background: #4a90d9;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 14px;
-            font-weight: normal;
+            font-weight: 500;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: background-color 0.15s;
         }
-        
-        .submit-btn:hover {
-            background: #555;
-        }
-        
-        .submit-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
+        .submit-btn:hover { background: #357abd; }
+        .submit-btn:disabled { background: #b2bec3; cursor: not-allowed; }
         .alert {
-            padding: 15px;
+            padding: 12px 16px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             display: none;
+            font-size: 14px;
         }
-        
         .alert-success {
             background: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
         }
-        
         .alert-error {
             background: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
-        
-        .alert-show {
-            display: block;
-        }
+        .alert-show { display: block; }
     </style>
 </head>
 <body>

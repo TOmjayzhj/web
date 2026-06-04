@@ -19,416 +19,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css">
     <title>商品商城</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #e8e8e8;
-        }
-        
-        .container {
-            display: grid;
-            grid-template-columns: 250px 1fr;
-            grid-template-rows: 80px 1fr;
-            min-height: 100vh;
-            gap: 0;
-        }
-        
-        /* 顶部搜索区域 */
-        .header {
-            grid-column: 1 / 3;
-            background-color: #ffffff;
-            padding: 20px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            z-index: 100;
-        }
-        
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        
-        .search-container {
-            flex: 1;
-            max-width: 500px;
-            margin: 0 30px;
-            position: relative;
-        }
-        
-        .search-box {
-            width: 100%;
-            padding: 12px 50px 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 25px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-        
-        .search-box:focus {
-            border-color: #3498db;
-        }
-        
-        .search-btn {
-            position: absolute;
-            right: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.2s;
-        }
-        
-        .search-btn:hover {
-            background-color: #2980b9;
-        }
-        
-        .header-icons {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-        
-        .icon-btn {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: #333;
-            font-size: 14px;
-        }
-        
-        .icon-btn i {
-            font-size: 20px;
-            margin-bottom: 5px;
-        }
-        
-        .badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background-color: #e74c3c;
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        /* 左侧导航栏 */
-        .sidebar {
-            background-color: #2c3e50;
-            color: white;
-            padding: 20px 0;
-            overflow-y: auto;
-        }
-        
-        .nav-title {
-            padding: 0 20px 15px;
-            font-size: 18px;
-            font-weight: bold;
-            border-bottom: 1px solid #34495e;
-            margin-bottom: 15px;
-        }
-        
-        .nav-item {
-            padding: 12px 20px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            border-left: 3px solid transparent;
-            text-decoration: none;
-            color: white;
-            display: block;
-        }
-        
-        .nav-item:hover {
-            background-color: #34495e;
-        }
-        
-        .nav-item.active {
-            background-color: #34495e;
-            border-left: 3px solid #3498db;
-        }
-        
-        .nav-item i {
-            margin-right: 10px;
-            width: 20px;
-            text-align: center;
-        }
-        
-        /* 主内容区域 */
-        .main-content {
-            padding: 30px;
-            background-color: #e8e8e8;
-        }
-        
-        .content-header {
-            margin-bottom: 25px;
-        }
-        
-        .content-header h2 {
-            color: #2c3e50;
-            font-size: 24px;
-        }
-        
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 25px;
-        }
-        
-        .product-card {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-        }
-        
-        .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-        }
-        
-        .product-image {
-            height: 200px;
-            background-color: #ecf0f1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #7f8c8d;
-            font-size: 48px;
-        }
-        
-        .product-info {
-            padding: 15px;
-        }
-        
-        .product-name {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #2c3e50;
-        }
-        
-        .product-price {
-            color: #e74c3c;
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
-        .add-to-cart {
-            width: 100%;
-            padding: 10px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.2s;
-            margin-bottom: 8px;
-        }
-        
-        .add-to-cart:hover {
-            background-color: #2980b9;
-        }
-        
-        .view-detail {
-            width: 100%;
-            padding: 10px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.2s;
-            margin-bottom: 8px;
-        }
-        
-        .view-detail:hover {
-            background-color: #2980b9;
-        }
-        
-        /* 右下角购物车悬浮按钮 */
+        /* 页面特定样式 */
         .cart-float {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            background-color: #e74c3c;
+            bottom: 28px;
+            right: 28px;
+            width: 56px;
+            height: 56px;
+            background-color: #4a90d9;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 24px;
+            font-size: 22px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 14px rgba(74,144,217,0.35);
             z-index: 1000;
-            transition: transform 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         
         .cart-float:hover {
-            transform: scale(1.1);
+            transform: scale(1.08);
+            box-shadow: 0 6px 20px rgba(74,144,217,0.45);
         }
         
         .cart-count {
             position: absolute;
-            top: -5px;
-            right: -5px;
-            background-color: #f39c12;
-            color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            font-size: 12px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-        }
-        
-        /* 提示消息样式 */
-        .toast {
-            position: fixed;
-            top: 100px;
-            right: 30px;
-            background-color: #27ae60;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 10000;
-            font-size: 14px;
-            opacity: 0;
-            transform: translateX(400px);
-            transition: all 0.3s ease;
-        }
-        
-        .toast.show {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        
-        .toast.error {
+            top: -4px;
+            right: -4px;
             background-color: #e74c3c;
-        }
-        
-        /* 用户下拉菜单样式 */
-        .user-dropdown {
-            position: relative;
-            cursor: pointer;
-        }
-        
-        .user-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            margin-top: 10px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            min-width: 220px;
-            z-index: 10000;
-            overflow: hidden;
-        }
-        
-        .user-menu.show {
-            display: block;
-        }
-        
-        .user-menu-header {
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .user-avatar {
-            font-size: 32px;
-            width: 50px;
-            height: 50px;
-            background-color: rgba(255,255,255,0.2);
             border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 11px;
             display: flex;
-            align-items: center;
             justify-content: center;
-        }
-        
-        .user-info {
-            flex: 1;
-        }
-        
-        .user-name {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-        
-        .user-role {
-            font-size: 12px;
-            opacity: 0.9;
-        }
-        
-        .user-menu-divider {
-            height: 1px;
-            background-color: #e0e0e0;
-            margin: 8px 0;
-        }
-        
-        .user-menu-item {
-            display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 12px 15px;
-            color: #333;
-            text-decoration: none;
-            transition: background-color 0.2s;
-            font-size: 14px;
-        }
-        
-        .user-menu-item:hover {
-            background-color: #e8e8e8;
-        }
-        
-        .user-menu-item span {
-            font-size: 18px;
-        }
-        
-        .logout-item {
-            color: #e74c3c;
-        }
-        
-        .logout-item:hover {
-            background-color: #ffeaea;
+            font-weight: 700;
+            border: 2px solid #fff;
         }
     </style>
 </head>
@@ -474,16 +107,16 @@
         <!-- 左侧分类导航 -->
         <nav class="sidebar">
             <div class="nav-title">商品分类</div>
-            <a href="#" class="nav-item active" data-category="phone"><span>📱</span> 手机数码</a>
-            <a href="#" class="nav-item" data-category="computer"><span>💻</span> 电脑办公</a>
-            <a href="#" class="nav-item" data-category="home"><span>🏠</span> 家居家装</a>
-            <a href="#" class="nav-item" data-category="clothes"><span>👕</span> 服饰鞋包</a>
-            <a href="#" class="nav-item" data-category="food"><span>🍎</span> 食品饮料</a>
-            <a href="#" class="nav-item" data-category="book"><span>📚</span> 图书文具</a>
-            <a href="#" class="nav-item" data-category="sport"><span>⚽</span> 运动户外</a>
-            <a href="#" class="nav-item" data-category="beauty"><span>💄</span> 美妆个护</a>
-            <a href="#" class="nav-item" data-category="baby"><span>🧸</span> 母婴玩具</a>
-            <a href="#" class="nav-item" data-category="hardware"><span>🔧</span> 五金工具</a>
+            <a href="#" class="nav-item active" data-category="phone">手机数码</a>
+            <a href="#" class="nav-item" data-category="computer">电脑办公</a>
+            <a href="#" class="nav-item" data-category="home">家居家装</a>
+            <a href="#" class="nav-item" data-category="clothes">服饰鞋包</a>
+            <a href="#" class="nav-item" data-category="food">食品饮料</a>
+            <a href="#" class="nav-item" data-category="book">图书文具</a>
+            <a href="#" class="nav-item" data-category="sport">运动户外</a>
+            <a href="#" class="nav-item" data-category="beauty">美妆个护</a>
+            <a href="#" class="nav-item" data-category="baby">母婴玩具</a>
+            <a href="#" class="nav-item" data-category="hardware">五金工具</a>
         </nav>
         
         <!-- 主内容区 -->
