@@ -32,7 +32,6 @@ public class CartServlet extends HttpServlet {
             return;
         }
         
-        // 检查管理员权限
         String role = (String) session.getAttribute("role");
         if ("admin".equals(role)) {
             response.setStatus(403);
@@ -42,10 +41,7 @@ public class CartServlet extends HttpServlet {
         
         String username = (String) session.getAttribute("username");
         String action = request.getParameter("action");
-        
-        if (action == null) {
-            action = "view";
-        }
+        if (action == null) action = "view";
         
         PrintWriter out = response.getWriter();
         
@@ -54,16 +50,13 @@ public class CartServlet extends HttpServlet {
                 List<CartItem> cart = CartDAO.getCart(username);
                 double total = CartDAO.getTotalPrice(username);
                 int count = CartDAO.getItemCount(username);
-                
                 out.print(convertCartToJson(cart, total, count));
                 break;
-                
             default:
                 response.setStatus(400);
                 out.print("{\"error\":\"未知操作\"}");
                 break;
         }
-        
         out.flush();
     }
     
@@ -75,14 +68,12 @@ public class CartServlet extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
         
         HttpSession session = request.getSession(false);
-        
         if (session == null || session.getAttribute("username") == null) {
             response.setStatus(401);
             response.getWriter().write("{\"error\":\"未登录\"}");
             return;
         }
         
-        // 检查管理员权限
         String postRole = (String) session.getAttribute("role");
         if ("admin".equals(postRole)) {
             response.setStatus(403);
@@ -105,10 +96,15 @@ public class CartServlet extends HttpServlet {
             case "add":
                 String productId = request.getParameter("productId");
                 String quantityStr = request.getParameter("quantity");
+                int quantity;
+                try {
+                    quantity = Integer.parseInt(quantityStr);
+                } catch (NumberFormatException e) {
+                    response.setStatus(400);
+                    out.print("{\"error\":\"参数格式错误\"}");
+                    break;
+                }
                 
-                int quantity = Integer.parseInt(quantityStr);
-                
-                // 获取商品信息
                 Product product = ProductDAOMySQL.getProductById(productId);
                 if (product == null) {
                     response.setStatus(404);
@@ -117,13 +113,9 @@ public class CartServlet extends HttpServlet {
                 }
                 
                 CartItem item = new CartItem(
-                    product.getId(),
-                    product.getName(),
-                    product.getIcon(),
-                    product.getPrice(),
-                    quantity
+                    product.getId(), product.getName(), product.getIcon(),
+                    product.getPrice(), quantity
                 );
-                
                 CartDAO.addToCart(username, item);
                 
                 int itemCount = CartDAO.getItemCount(username);
@@ -132,8 +124,14 @@ public class CartServlet extends HttpServlet {
                 
             case "update":
                 String updateProductId = request.getParameter("productId");
-                int newQuantity = Integer.parseInt(request.getParameter("quantity"));
-                
+                int newQuantity;
+                try {
+                    newQuantity = Integer.parseInt(request.getParameter("quantity"));
+                } catch (NumberFormatException e) {
+                    response.setStatus(400);
+                    out.print("{\"error\":\"参数格式错误\"}");
+                    break;
+                }
                 CartDAO.updateQuantity(username, updateProductId, newQuantity);
                 out.print("{\"success\":true,\"message\":\"更新成功\"}");
                 break;
@@ -154,11 +152,9 @@ public class CartServlet extends HttpServlet {
                 out.print("{\"error\":\"未知操作\"}");
                 break;
         }
-        
         out.flush();
     }
     
-    /** 购物车转JSON */
     private String convertCartToJson(List<CartItem> cart, double total, int count) {
         StringBuilder json = new StringBuilder();
         json.append("{");
@@ -176,15 +172,10 @@ public class CartServlet extends HttpServlet {
             json.append("\"quantity\":").append(item.getQuantity()).append(",");
             json.append("\"subtotal\":").append(String.format("%.2f", item.getSubtotal()));
             json.append("}");
-            
-            if (i < cart.size() - 1) {
-                json.append(",");
-            }
+            if (i < cart.size() - 1) json.append(",");
         }
         
-        json.append("]");
-        json.append("}");
-        
+        json.append("]}");
         return json.toString();
     }
 }

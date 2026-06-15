@@ -17,7 +17,6 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        // 检查是否已登录
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("username") != null) {
             String role = (String) session.getAttribute("role");
@@ -35,7 +34,6 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        // 处理登录请求
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
         
@@ -44,7 +42,6 @@ public class LoginServlet extends HttpServlet {
         
         User loginUser = UserDAO.authenticate(username, password);
         
-        // 验证用户
         if (loginUser != null) {
             HttpSession session = request.getSession();
             session.setAttribute("username", loginUser.getUsername());
@@ -52,11 +49,16 @@ public class LoginServlet extends HttpServlet {
             session.setAttribute("user", loginUser);
             session.setMaxInactiveInterval(30 * 60);
             
-            // 根据角色跳转
+            // 根据角色重定向，普通用户跳偏好商品类
             if (loginUser.isAdmin()) {
                 response.sendRedirect(request.getContextPath() + "/admin.jsp");
             } else {
-                response.sendRedirect(request.getContextPath() + "/shop.jsp");
+                String favCategory = UserDAO.getUserFavoriteCategory(username);
+                String redirectUrl = request.getContextPath() + "/shop.jsp";
+                if (favCategory != null && !favCategory.isEmpty()) {
+                    redirectUrl += "?category=" + favCategory;
+                }
+                response.sendRedirect(redirectUrl);
             }
         } else {
             request.setAttribute("error", "用户名或密码错误");

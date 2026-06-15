@@ -22,20 +22,17 @@ public class ProductServlet extends HttpServlet {
             throws ServletException, IOException {
         
         request.setCharacterEncoding("UTF-8");
-        
         String action = request.getParameter("action");
         HttpSession session = request.getSession();
         String role = (String) session.getAttribute("role");
         boolean isAdmin = "admin".equals(role);
         
-        // 获取商品详情
         if ("getDetail".equals(action)) {
             response.setContentType("application/json;charset=UTF-8");
             handleGetProductDetail(request, response);
             return;
         }
         
-        // 管理员操作
         if (isAdmin && "admin_data".equals(action)) {
             response.setContentType("application/json;charset=UTF-8");
             handleAdminRequest(request, response);
@@ -45,8 +42,6 @@ public class ProductServlet extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
         
         String keyword = request.getParameter("keyword");
-        
-        // 搜索商品
         if (keyword != null && !keyword.trim().isEmpty()) {
             Map<String, Object> searchResult = ProductDAOMySQL.searchProductsWithResult(keyword.trim());
             String json = convertSearchResultToJson(searchResult, keyword);
@@ -57,10 +52,7 @@ public class ProductServlet extends HttpServlet {
         }
         
         String category = request.getParameter("category");
-        
-        if (category == null || category.trim().isEmpty()) {
-            category = "phone";
-        }
+        if (category == null || category.trim().isEmpty()) category = "phone";
         
         List<Product> products = ProductDAOMySQL.getProductsByCategory(category);
         String json = convertProductsToJson(products, category, isAdmin);
@@ -79,7 +71,6 @@ public class ProductServlet extends HttpServlet {
         HttpSession session = request.getSession();
         String role = (String) session.getAttribute("role");
         
-        // 仅管理员可执行POST
         if (!"admin".equals(role)) {
             PrintWriter out = response.getWriter();
             out.print("{\"success\":false,\"error\":\"权限不足\"}");
@@ -88,7 +79,6 @@ public class ProductServlet extends HttpServlet {
         }
         
         String action = request.getParameter("action");
-        
         if ("add".equals(action)) {
             handleAddProduct(request, response);
         } else if ("update".equals(action)) {
@@ -102,11 +92,9 @@ public class ProductServlet extends HttpServlet {
         }
     }
     
-    /** 获取商品详情 */
     private void handleGetProductDetail(HttpServletRequest request, HttpServletResponse response) 
             throws IOException {
         String productId = request.getParameter("productId");
-        
         if (productId == null || productId.trim().isEmpty()) {
             PrintWriter out = response.getWriter();
             out.print("{\"success\":false,\"message\":\"商品ID不能为空\"}");
@@ -115,7 +103,6 @@ public class ProductServlet extends HttpServlet {
         }
         
         Product product = ProductDAOMySQL.getProductById(productId);
-        
         PrintWriter out = response.getWriter();
         if (product != null) {
             StringBuilder json = new StringBuilder();
@@ -133,23 +120,18 @@ public class ProductServlet extends HttpServlet {
         out.flush();
     }
     
-    /** 管理员请求（含订单数量） */
     private void handleAdminRequest(HttpServletRequest request, HttpServletResponse response) 
             throws IOException {
         String category = request.getParameter("category");
-        if (category == null || category.trim().isEmpty()) {
-            category = "phone";
-        }
+        if (category == null || category.trim().isEmpty()) category = "phone";
         
         List<Product> products = ProductDAOMySQL.getProductsByCategory(category);
         String json = convertProductsToJson(products, category, true);
-        
         PrintWriter out = response.getWriter();
         out.print(json);
         out.flush();
     }
     
-    /** 添加商品 */
     private void handleAddProduct(HttpServletRequest request, HttpServletResponse response) 
             throws IOException {
         String id = request.getParameter("id");
@@ -162,7 +144,6 @@ public class ProductServlet extends HttpServlet {
             double price = Double.parseDouble(priceStr);
             Product product = new Product(id, name, category, icon, price);
             boolean success = ProductDAOMySQL.addProduct(product);
-            
             PrintWriter out = response.getWriter();
             if (success) {
                 out.print("{\"success\":true,\"message\":\"商品添加成功\"}");
@@ -177,7 +158,6 @@ public class ProductServlet extends HttpServlet {
         }
     }
     
-    /** 更新商品 */
     private void handleUpdateProduct(HttpServletRequest request, HttpServletResponse response) 
             throws IOException {
         String productId = request.getParameter("productId");
@@ -188,7 +168,6 @@ public class ProductServlet extends HttpServlet {
         try {
             Double price = priceStr != null ? Double.parseDouble(priceStr) : null;
             boolean success = ProductDAOMySQL.updateProduct(productId, name, price, icon);
-            
             PrintWriter out = response.getWriter();
             if (success) {
                 out.print("{\"success\":true,\"message\":\"商品更新成功\"}");
@@ -203,13 +182,10 @@ public class ProductServlet extends HttpServlet {
         }
     }
     
-    /** 删除商品 */
     private void handleDeleteProduct(HttpServletRequest request, HttpServletResponse response) 
             throws IOException {
         String productId = request.getParameter("productId");
-        
         boolean success = ProductDAOMySQL.deleteProduct(productId);
-        
         PrintWriter out = response.getWriter();
         if (success) {
             out.print("{\"success\":true,\"message\":\"商品删除成功\"}");
@@ -228,7 +204,6 @@ public class ProductServlet extends HttpServlet {
                   .replace("\t", "\\t");
     }
     
-    /** 商品列表转JSON */
     private String convertProductsToJson(List<Product> products, String category, boolean isAdmin) {
         StringBuilder json = new StringBuilder();
         json.append("{");
@@ -243,26 +218,19 @@ public class ProductServlet extends HttpServlet {
             json.append("\"icon\":\"").append(product.getIcon()).append("\",");
             json.append("\"price\":").append(product.getPrice());
             
-            // 管理员添加订单数量
             if (isAdmin) {
                 int orderCount = ProductDAOMySQL.getProductOrderCount(product.getId());
                 json.append(",\"orderCount\":").append(orderCount);
             }
             
             json.append("}");
-            
-            if (i < products.size() - 1) {
-                json.append(",");
-            }
+            if (i < products.size() - 1) json.append(",");
         }
         
-        json.append("]");
-        json.append("}");
-        
+        json.append("]}");
         return json.toString();
     }
     
-    /** 搜索结果转JSON */
     @SuppressWarnings("unchecked")
     private String convertSearchResultToJson(Map<String, Object> searchResult, String keyword) {
         StringBuilder json = new StringBuilder();
@@ -284,15 +252,10 @@ public class ProductServlet extends HttpServlet {
             json.append("\"price\":").append(product.get("price")).append(",");
             json.append("\"category\":\"").append(product.get("category")).append("\"");
             json.append("}");
-            
-            if (i < products.size() - 1) {
-                json.append(",");
-            }
+            if (i < products.size() - 1) json.append(",");
         }
         
-        json.append("]");
-        json.append("}");
-        
+        json.append("]}");
         return json.toString();
     }
 }

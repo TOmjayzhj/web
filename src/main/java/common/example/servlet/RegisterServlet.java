@@ -22,7 +22,6 @@ public class RegisterServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        // 处理注册请求
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
         
@@ -30,7 +29,7 @@ public class RegisterServlet extends HttpServlet {
         String password = request.getParameter("password");
         String confirmPassword = request.getParameter("confirmPassword");
         
-        // 参数验证
+        // 基本校验
         if (username == null || username.trim().isEmpty()) {
             request.setAttribute("error", "用户名不能为空");
             request.setAttribute("showRegister", true);
@@ -52,7 +51,7 @@ public class RegisterServlet extends HttpServlet {
             return;
         }
         
-        // 检查用户名是否已存在
+        // 查重
         User existingUser = UserDAO.getUserByUsername(username);
         if (existingUser != null) {
             request.setAttribute("error", "用户名已存在");
@@ -61,7 +60,7 @@ public class RegisterServlet extends HttpServlet {
             return;
         }
         
-        // 注册用户
+        // 写入数据库
         boolean success = UserDAO.registerUser(username, password, User.ROLE_CUSTOMER);
         
         if (success) {

@@ -1,12 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <% 
-    // 检查用户是否已登录
-    if (session.getAttribute("username") == null) {
+    if (session == null || session.getAttribute("username") == null) {
         response.sendRedirect(request.getContextPath() + "/login");
         return;
     }
     
-    // 如果是管理员，跳转到管理员页面
     String cartRole = (String) session.getAttribute("role");
     if ("admin".equals(cartRole)) {
         response.sendRedirect(request.getContextPath() + "/admin.jsp");
@@ -22,7 +20,6 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css">
     <title>我的购物车</title>
     <style>
-        /* 页面特定样式 - 购物车使用单列布局 */
         .container {
             display: block;
             max-width: 1200px;
@@ -64,7 +61,7 @@
             border-bottom: 1px solid #f1f2f6;
             transition: background-color 0.15s;
         }
-        .cart-item:hover { background-color: #f8fafc; }
+        .cart-item:hover { background-color: #f5f8fb; }
         .cart-item:last-child { border-bottom: none; }
         .item-icon { font-size: 42px; text-align: center; }
         .item-name { font-size: 15px; font-weight: 600; color: #2d3436; }
@@ -96,7 +93,7 @@
             color: #e74c3c; cursor: pointer;
             font-size: 18px; transition: transform 0.15s;
         }
-        .delete-btn:hover { transform: scale(1.15); }
+        .delete-btn:hover { transform: scale(1.2); color: #c0392b; }
         .cart-summary {
             background-color: white;
             padding: 20px;
@@ -118,6 +115,7 @@
             transition: background-color 0.15s;
         }
         .clear-btn:hover { background-color: #c0392b; }
+        .clear-btn:active { background-color: #a93226; transform: scale(0.97); }
         .checkout-btn {
             padding: 10px 32px;
             background-color: #27ae60;
@@ -126,17 +124,20 @@
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
-            transition: background-color 0.15s;
+            transition: background-color 0.15s, transform 0.1s;
             margin-right: 10px;
         }
         .checkout-btn:hover { background-color: #219a52; }
-        .empty-cart { text-align: center; padding: 50px 20px; color: #b2bec3; font-size: 16px; }
-        .empty-cart-icon { font-size: 64px; margin-bottom: 16px; }
+        .checkout-btn:active { background-color: #1b8a47; transform: scale(0.97); }
+        .empty-cart { text-align: center; padding: 60px 20px; color: #b2bec3; font-size: 16px; }
+        .empty-cart-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.6; }
     </style>
 </head>
 <body>
+    <div id="toast" class="toast"></div>
+    
     <header class="header">
-        <div class="logo">🛒 我的购物车</div>
+        <div class="logo">我的购物车</div>
         <a href="${pageContext.request.contextPath}/shop.jsp" class="back-btn">继续购物</a>
     </header>
     
@@ -146,20 +147,18 @@
         </div>
         
         <div class="cart-items" id="cartItems">
-            <!-- 购物车商品会动态加载 -->
         </div>
         
         <div class="cart-summary" id="cartSummary" style="display: none;">
             <div class="total-price">
                 总计：<span id="totalPrice">¥0.00</span>
             </div>
-            <button class="checkout-btn" onclick="checkout()">💳 结算</button>
+            <button class="checkout-btn" onclick="checkout()">结算</button>
             <button class="clear-btn" onclick="clearCart()">清空购物车</button>
         </div>
     </div>
     
     <script>
-        // 加载购物车数据
         function loadCart() {
             var contextPath = '${pageContext.request.contextPath}';
             fetch(contextPath + '/cart?action=view')
@@ -178,8 +177,7 @@
                         '<div class="empty-cart">加载失败</div>';
                 });
         }
-        
-        // 渲染购物车
+
         function renderCart(data) {
             var cartItems = document.getElementById('cartItems');
             var cartSummary = document.getElementById('cartSummary');
@@ -215,8 +213,7 @@
             document.getElementById('totalPrice').textContent = '¥' + data.total;
             cartSummary.style.display = 'block';
         }
-        
-        // 更新商品数量
+
         function updateQuantity(productId, quantity) {
             if (quantity <= 0) {
                 removeItem(productId);
@@ -241,15 +238,14 @@
             })
             .then(function(data) {
                 if (data.success) {
-                    loadCart(); // 重新加载购物车
+                    loadCart();
                 }
             })
             .catch(function(error) {
                 console.error('更新失败:', error);
             });
         }
-        
-        // 删除商品
+
         function removeItem(productId) {
             if (!confirm('确定要删除这个商品吗？')) {
                 return;
@@ -272,15 +268,14 @@
             })
             .then(function(data) {
                 if (data.success) {
-                    loadCart(); // 重新加载购物车
+                    loadCart();
                 }
             })
             .catch(function(error) {
                 console.error('删除失败:', error);
             });
         }
-        
-        // 清空购物车
+
         function clearCart() {
             if (!confirm('确定要清空购物车吗？')) {
                 return;
@@ -302,16 +297,15 @@
             })
             .then(function(data) {
                 if (data.success) {
-                    loadCart(); // 重新加载购物车
-                    updateCartCount(0); // 更新顶部购物车数量
+                    loadCart();
+                    updateCartCount(0);
                 }
             })
             .catch(function(error) {
                 console.error('清空失败:', error);
             });
         }
-        
-        // 结算
+
         function checkout() {
             if (!confirm('确定要结算这些商品吗？')) {
                 return;
@@ -333,28 +327,33 @@
             })
             .then(function(data) {
                 if (data.success) {
-                    alert('订单创建成功！订单号：' + data.orderId);
-                    // 跳转到订单页面
                     window.location.href = contextPath + '/order.jsp';
                 } else {
-                    alert('结算失败：' + data.error);
+                    showToast('结算失败：' + data.error, 'error');
                 }
             })
             .catch(function(error) {
                 console.error('结算失败:', error);
-                alert('结算失败，请重试');
+                showToast('结算失败，请重试', 'error');
             });
         }
-        
-        // 更新顶部购物车数量（如果需要）
+
         function updateCartCount(count) {
             var cartCount = document.querySelector('.cart-count');
             if (cartCount) {
                 cartCount.textContent = count;
             }
         }
-        
-        // 页面加载时加载购物车
+
+        function showToast(message, type) {
+            type = type || 'success';
+            var toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            setTimeout(function() { toast.classList.add('show'); }, 10);
+            setTimeout(function() { toast.classList.remove('show'); }, 2000);
+        }
+
         window.onload = function() {
             loadCart();
         };

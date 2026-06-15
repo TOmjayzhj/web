@@ -1,12 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <% 
-    // 检查用户是否已登录
-    if (session.getAttribute("username") == null) {
+    if (session == null || session.getAttribute("username") == null) {
         response.sendRedirect(request.getContextPath() + "/login");
         return;
     }
     
-    // 如果是管理员，跳转到管理员页面
     String role = (String) session.getAttribute("role");
     if ("admin".equals(role)) {
         response.sendRedirect(request.getContextPath() + "/admin.jsp");
@@ -22,7 +20,6 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css">
     <title>商品商城</title>
     <style>
-        /* 页面特定样式 */
         .cart-float {
             position: fixed;
             bottom: 28px;
@@ -39,12 +36,17 @@
             cursor: pointer;
             box-shadow: 0 4px 14px rgba(74,144,217,0.35);
             z-index: 1000;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
         }
         
         .cart-float:hover {
-            transform: scale(1.08);
-            box-shadow: 0 6px 20px rgba(74,144,217,0.45);
+            transform: scale(1.1);
+            box-shadow: 0 8px 24px rgba(74,144,217,0.5);
+            background-color: #357abd;
+        }
+        
+        .cart-float:active {
+            transform: scale(0.95);
         }
         
         .cart-count {
@@ -63,33 +65,34 @@
             font-weight: 700;
             border: 2px solid #fff;
         }
+        
+        .nav-item .nav-icon {
+            margin-right: 6px;
+        }
     </style>
 </head>
 <body>
-    <!-- 提示消息容器 -->
     <div id="toast" class="toast"></div>
     
     <div class="container">
-        <!-- 顶部搜索栏 -->
         <header class="header">
             <div class="logo">商品商城</div>
             <div class="search-container">
                 <input type="text" id="searchBox" class="search-box" placeholder="搜索商品...">
-                <button class="search-btn" onclick="searchProducts()">🔍</button>
+                <button class="search-btn" onclick="searchProducts()">&#128269;</button>
             </div>
             <div class="header-icons">
                 <a href="${pageContext.request.contextPath}/order.jsp" class="icon-btn">
-                    <span>📦</span>
+                    <span>&#128230;</span>
                     <span>订单</span>
                     <span class="badge" id="orderBadge">0</span>
                 </a>
                 <div class="icon-btn user-dropdown" onclick="toggleUserMenu()">
-                    <span>👤</span>
+                    <span>&#128100;</span>
                     <span>${sessionScope.username}</span>
-                    <!-- 用户下拉菜单 -->
                     <div id="userMenu" class="user-menu">
                         <div class="user-menu-header">
-                            <div class="user-avatar">👤</div>
+                            <div class="user-avatar">&#128100;</div>
                             <div class="user-info">
                                 <div class="user-name">${sessionScope.username}</div>
                                 <div class="user-role" id="userRole">${sessionScope.role == 'admin' ? '管理员' : '普通用户'}</div>
@@ -97,14 +100,13 @@
                         </div>
                         <div class="user-menu-divider"></div>
                         <a href="${pageContext.request.contextPath}/logout" class="user-menu-item logout-item">
-                            <span>🚪</span> 退出登录
+                            <span>&#128682;</span> 退出登录
                         </a>
                     </div>
                 </div>
             </div>
         </header>
         
-        <!-- 左侧分类导航 -->
         <nav class="sidebar">
             <div class="nav-title">商品分类</div>
             <a href="#" class="nav-item active" data-category="phone">手机数码</a>
@@ -119,33 +121,28 @@
             <a href="#" class="nav-item" data-category="hardware">五金工具</a>
         </nav>
         
-        <!-- 主内容区 -->
         <main class="main-content">
             <div class="content-header">
                 <h2>热门商品</h2>
             </div>
             <div class="product-grid" id="productGrid">
-                <!-- 商品会通过JavaScript动态加载 -->
             </div>
         </main>
     </div>
     
-    <!-- 右下角悬浮购物车按钮 -->
     <div class="cart-float" onclick="window.location.href='${pageContext.request.contextPath}/cart.jsp'">
-        🛒
+        &#128722;
         <span class="cart-count">0</span>
     </div>
     
     <script>
-        // 切换用户菜单显示/隐藏
         function toggleUserMenu() {
             var userMenu = document.getElementById('userMenu');
             if (userMenu) {
                 userMenu.classList.toggle('show');
             }
         }
-        
-        // 点击其他地方关闭用户菜单
+
         document.addEventListener('click', function(e) {
             var userDropdown = document.querySelector('.user-dropdown');
             var userMenu = document.getElementById('userMenu');
@@ -155,11 +152,9 @@
             }
         });
         
-        // 从后端加载商品数据
         let products = {};
-        let currentCategory = 'phone'; // 记录当前分类
-        
-        // 搜索商品功能
+        let currentCategory = 'phone';
+
         function searchProducts() {
             var searchBox = document.getElementById('searchBox');
             var keyword = searchBox.value.trim();
@@ -169,7 +164,6 @@
                 return;
             }
             
-            // 调用后端搜索API
             var contextPath = '${pageContext.request.contextPath}';
             var url = contextPath + '/products?keyword=' + encodeURIComponent(keyword);
             
@@ -182,40 +176,31 @@
                 })
                 .then(function(data) {
                     if (data.found && data.products.length > 0) {
-                        // 找到商品，获取第一个商品的分类
                         var firstProduct = data.products[0];
                         var category = firstProduct.category;
-                        
-                        // 转换商品数据格式
+
                         var searchResults = data.products.map(function(p) {
                             return {
                                 id: p.id,
                                 name: p.name,
                                 icon: p.icon,
-                                price: '￥' + p.price.toFixed(2)
+                                price: '¥' + p.price.toFixed(2)
                             };
                         });
                         
-                        // 存储搜索结果
                         products['search'] = searchResults;
-                        
-                        // 切换到对应分类
                         switchCategory(category);
-                        
-                        // 显示搜索结果
                         renderProducts('search');
-                        
-                        // 更新标题
+
                         document.querySelector('.content-header h2').textContent = 
                             '搜索结果（找到 ' + data.products.length + ' 件商品）';
                         
-                        showToast('✓ 找到 ' + data.products.length + ' 件商品', 'success');
+                        showToast('找到 ' + data.products.length + ' 件商品', 'success');
                     } else {
-                        // 未找到商品
                         document.querySelector('.content-header h2').textContent = '搜索结果';
                         var grid = document.getElementById('productGrid');
-                        grid.innerHTML = '<p style="text-align: center; color: #999; padding: 50px; font-size: 18px;">😔 未找到包含“' + keyword + '”的商品</p>';
-                        showToast('✗ 未找到该商品', 'error');
+                        grid.innerHTML = '<p style="text-align: center; color: #888; padding: 50px; font-size: 16px;">未找到包含“' + keyword + '”的商品</p>';
+                        showToast('未找到该商品', 'error');
                     }
                 })
                 .catch(function(error) {
@@ -224,29 +209,24 @@
                     if (grid) {
                         grid.innerHTML = '<p style="text-align: center; color: red; padding: 50px;">搜索失败，请重试</p>';
                     }
-                    showToast('✗ 搜索失败', 'error');
+                    showToast('搜索失败', 'error');
                 });
         }
-        
-        // 切换到指定分类
+
         function switchCategory(category) {
-            // 更新当前分类
             currentCategory = category;
-            
-            // 更新导航栏高亮
+
             document.querySelectorAll('.nav-item').forEach(function(item) {
                 item.classList.remove('active');
                 if (item.getAttribute('data-category') === category) {
                     item.classList.add('active');
                 }
             });
-            
-            // 更新URL
+
             var newUrl = window.location.pathname + '?category=' + category;
             window.history.pushState({}, '', newUrl);
         }
-        
-        // 获取分类名称
+
         function getCategoryName(category) {
             var categoryNames = {
                 'phone': '手机数码',
@@ -262,34 +242,28 @@
             };
             return categoryNames[category] || '热门商品';
         }
-        
-        // 查看商品详情
+
         function viewProductDetail(productId) {
-            console.log('跳转到商品详情:', productId);
             window.location.href = 'product_detail.jsp?id=' + productId;
         }
-        
-        // 显示提示消息
+
         function showToast(message, type) {
             type = type || 'success';
             var toast = document.getElementById('toast');
             toast.textContent = message;
             toast.className = 'toast ' + type;
-            
-            // 显示提示
+
             setTimeout(function() {
                 toast.classList.add('show');
             }, 10);
-            
-            // 2秒后自动隐藏
+
             setTimeout(function() {
                 toast.classList.remove('show');
             }, 2000);
         }
-        
-        // 加载商品数据函数
+
         function loadProducts(category) {
-            currentCategory = category; // 记录当前分类
+            currentCategory = category;
             var contextPath = '${pageContext.request.contextPath}';
             var url = contextPath + '/products?category=' + category;
             
@@ -319,8 +293,7 @@
                     }
                 });
         }
-        
-        // 渲染商品函数
+
         function renderProducts(category) {
             const grid = document.getElementById('productGrid');
             
@@ -334,8 +307,7 @@
                 grid.innerHTML = '<p style="text-align: center; color: #999; padding: 50px;">暂无商品</p>';
                 return;
             }
-            
-            // 使用字符串拼接生成HTML
+
             let html = '';
             for (let i = 0; i < categoryProducts.length; i++) {
                 const product = categoryProducts[i];
@@ -352,8 +324,7 @@
             
             grid.innerHTML = html;
         }
-        
-        // 加载购物车数量
+
         function loadCartCount() {
             var contextPath = '${pageContext.request.contextPath}';
             fetch(contextPath + '/cart?action=view')
@@ -375,8 +346,7 @@
                     console.error('加载购物车数量失败:', error);
                 });
         }
-        
-        // 加载订单数量
+
         function loadOrderCount() {
             var contextPath = '${pageContext.request.contextPath}';
             fetch(contextPath + '/order?action=count')
@@ -391,7 +361,6 @@
                         var orderBadge = document.getElementById('orderBadge');
                         if (orderBadge) {
                             orderBadge.textContent = data.count;
-                            // 如果订单数为0，隐藏badge
                             if (data.count === 0) {
                                 orderBadge.style.display = 'none';
                             } else {
@@ -404,21 +373,14 @@
                     console.error('加载订单数量失败:', error);
                 });
         }
-        
-        // 添加到购物车
+
         function addToCart(productId) {
-            console.log('准备添加商品到购物车，ProductId:', productId);
-            
             var contextPath = '${pageContext.request.contextPath}';
-            
-            // 使用 URLSearchParams 而不是 FormData
+
             var params = new URLSearchParams();
             params.append('action', 'add');
             params.append('productId', productId);
             params.append('quantity', '1');
-            
-            console.log('请求URL:', contextPath + '/cart');
-            console.log('请求数据:', params.toString());
             
             fetch(contextPath + '/cart', {
                 method: 'POST',
@@ -428,41 +390,29 @@
                 body: params.toString()
             })
             .then(function(response) {
-                console.log('响应状态:', response.status);
-                console.log('响应OK:', response.ok);
                 return response.json();
             })
             .then(function(data) {
-                console.log('响应数据:', data);
                 if (data.success) {
-                    // 显示成功提示
-                    showToast('✓ 已添加到购物车！！！！', 'success');
-                    // 更新购物车数量
+                    showToast('已添加到购物车', 'success');
                     var cartCount = document.querySelector('.cart-count');
                     if (cartCount) {
                         cartCount.textContent = data.itemCount;
                     }
                 } else {
-                    showToast('✗ ' + data.error, 'error');
+                    showToast(data.error, 'error');
                 }
             })
             .catch(function(error) {
                 console.error('添加失败:', error);
-                showToast('✗ 添加失败，请重试', 'error');
+                showToast('添加失败，请重试', 'error');
             });
         }
 
-        // 页面加载时根据URL参数高亮对应分类并显示商品
         window.onload = function() {
-            console.log('页面加载完成');
-            
-            // 加载购物车数量
             loadCartCount();
-            
-            // 加载订单数量
             loadOrderCount();
-            
-            // 为搜索框添加回车键事件
+
             var searchBox = document.getElementById('searchBox');
             if (searchBox) {
                 searchBox.addEventListener('keypress', function(e) {
@@ -471,64 +421,44 @@
                     }
                 });
             }
-            
+
             const urlParams = new URLSearchParams(window.location.search);
             const currentCategory = urlParams.get('category') || 'phone';
-            console.log('当前分类:', currentCategory);
-            
-            // 移除所有active类
+
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
             });
-            
-            // 为当前分类添加active类
+
             const activeItem = document.querySelector(`.nav-item[data-category="${currentCategory}"]`);
             if (activeItem) {
                 activeItem.classList.add('active');
             }
-            
-            // 更新页面标题
+
             document.querySelector('.content-header h2').textContent = getCategoryName(currentCategory);
-            
-            // 从后端加载商品数据
             loadProducts(currentCategory);
-            
-            // 为所有导航项添加点击事件
+
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.addEventListener('click', function(e) {
-                    e.preventDefault(); // 阻止默认链接行为
-                    
-                    // 确保获取到的是 <a> 元素的 data-category
+                    e.preventDefault();
                     const target = e.target.closest('.nav-item');
-                    if (!target) {
-                        console.error('未找到导航项');
-                        return;
-                    }
-                    
+                    if (!target) return;
+
                     const category = target.getAttribute('data-category');
-                    console.log('点击分类:', category);
-                    
-                    // 清空搜索框
+
                     var searchBox = document.getElementById('searchBox');
                     if (searchBox) {
                         searchBox.value = '';
                     }
-                    
-                    // 更新URL（不刷新页面）
+
                     const newUrl = window.location.pathname + '?category=' + category;
-                    console.log('新URL:', newUrl);
                     window.history.pushState({}, '', newUrl);
-                    
-                    // 更新active状态
+
                     document.querySelectorAll('.nav-item').forEach(nav => {
                         nav.classList.remove('active');
                     });
                     target.classList.add('active');
-                    
-                    // 更新标题
+
                     document.querySelector('.content-header h2').textContent = getCategoryName(category);
-                    
-                    // 从后端加载商品
                     loadProducts(category);
                 });
             });

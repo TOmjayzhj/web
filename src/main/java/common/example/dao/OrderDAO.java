@@ -12,7 +12,7 @@ import java.util.List;
 
 public class OrderDAO {
     
-    /** 创建订单 */
+    // 下单，用事务保证一致性
     public static Order createOrder(String username, List<CartItem> cartItems) {
         if (cartItems == null || cartItems.isEmpty()) {
             return null;
@@ -23,7 +23,6 @@ public class OrderDAO {
             conn = DBUtil.getConnection();
             conn.setAutoCommit(false);
             
-            // 生成订单ID
             String orderId = "ORD" + System.currentTimeMillis();
             
             double totalAmount = 0.0;
@@ -31,7 +30,6 @@ public class OrderDAO {
                 totalAmount += item.getPrice() * item.getQuantity();
             }
             
-            // 插入订单
             String orderSql = "INSERT INTO orders (id, username, total_amount, status) VALUES (?, ?, ?, ?)";
             try (PreparedStatement orderPstmt = conn.prepareStatement(orderSql)) {
                 orderPstmt.setString(1, orderId);
@@ -41,7 +39,6 @@ public class OrderDAO {
                 orderPstmt.executeUpdate();
             }
             
-            // 插入订单详情
             String itemSql = "INSERT INTO order_items (order_id, product_id, product_name, icon, price, quantity) VALUES (?, ?, ?, ?, ?, ?)";
             try (PreparedStatement itemPstmt = conn.prepareStatement(itemSql)) {
                 for (CartItem cartItem : cartItems) {
@@ -57,7 +54,6 @@ public class OrderDAO {
             }
             
             CartDAO.clearCart(username);
-            
             conn.commit();
             
             Order order = new Order();
@@ -84,36 +80,24 @@ public class OrderDAO {
             
         } catch (SQLException e) {
             if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
             }
-            System.err.println("[OrderDAO] 创建订单失败: " + e.getMessage());
             e.printStackTrace();
             return null;
         } finally {
             if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
+                try { conn.setAutoCommit(true); } catch (SQLException e) { e.printStackTrace(); }
             }
         }
     }
     
-    /** 获取用户订单列表 */
+    // 查某用户的订单
     public static List<Order> getUserOrders(String username) {
         List<Order> orders = new ArrayList<>();
         String orderSql = "SELECT id, username, total_amount, status, order_time FROM orders WHERE username = ? ORDER BY order_time DESC";
-        
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement orderPstmt = conn.prepareStatement(orderSql)) {
-            
             orderPstmt.setString(1, username);
-            
             try (ResultSet orderRs = orderPstmt.executeQuery()) {
                 while (orderRs.next()) {
                     Order order = new Order();
@@ -122,32 +106,48 @@ public class OrderDAO {
                     order.setTotalAmount(orderRs.getDouble("total_amount"));
                     order.setStatus(orderRs.getString("status"));
                     order.setOrderTime(orderRs.getTimestamp("order_time"));
-                    
-                    // 获取订单详情
                     order.setItems(getOrderItems(order.getOrderId()));
-                    
                     orders.add(order);
                 }
             }
-            
         } catch (SQLException e) {
-            System.err.println("[OrderDAO] 获取用户订单失败: " + e.getMessage());
             e.printStackTrace();
         }
-        
         return orders;
     }
     
-    /** 获取订单详情 */
+    // 查某用户指定状态的订单
+    public static List<Order> getUserOrdersByStatus(String username, String status) {
+        List<Order> orders = new ArrayList<>();
+        String orderSql = "SELECT id, username, total_amount, status, order_time FROM orders WHERE username = ? AND status = ? ORDER BY order_time DESC";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement orderPstmt = conn.prepareStatement(orderSql)) {
+            orderPstmt.setString(1, username);
+            orderPstmt.setString(2, status);
+            try (ResultSet orderRs = orderPstmt.executeQuery()) {
+                while (orderRs.next()) {
+                    Order order = new Order();
+                    order.setOrderId(orderRs.getString("id"));
+                    order.setUsername(orderRs.getString("username"));
+                    order.setTotalAmount(orderRs.getDouble("total_amount"));
+                    order.setStatus(orderRs.getString("status"));
+                    order.setOrderTime(orderRs.getTimestamp("order_time"));
+                    order.setItems(getOrderItems(order.getOrderId()));
+                    orders.add(order);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return orders;
+    }
+    
     private static List<OrderItem> getOrderItems(String orderId) {
         List<OrderItem> items = new ArrayList<>();
         String sql = "SELECT product_id, product_name, icon, price, quantity FROM order_items WHERE order_id = ?";
-        
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
             pstmt.setString(1, orderId);
-            
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     OrderItem item = new OrderItem(
@@ -160,42 +160,31 @@ public class OrderDAO {
                     items.add(item);
                 }
             }
-            
         } catch (SQLException e) {
-            System.err.println("[OrderDAO] 获取订单详情失败: " + e.getMessage());
             e.printStackTrace();
         }
-        
         return items;
     }
     
-    /** 更新订单状态 */
     public static void updateOrderStatus(String orderId, String newStatus) {
         String sql = "UPDATE orders SET status = ? WHERE id = ?";
-        
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
             pstmt.setString(1, newStatus);
             pstmt.setString(2, orderId);
-            
             pstmt.executeUpdate();
-            
         } catch (SQLException e) {
-            System.err.println("[OrderDAO] 更新订单状态失败: " + e.getMessage());
             e.printStackTrace();
         }
     }
     
-    /** 获取所有订单 */
+    // 管理员查所有订单
     public static List<Order> getAllOrders() {
         List<Order> orders = new ArrayList<>();
         String orderSql = "SELECT id, username, total_amount, status, order_time FROM orders ORDER BY order_time DESC";
-        
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement orderPstmt = conn.prepareStatement(orderSql);
              ResultSet orderRs = orderPstmt.executeQuery()) {
-            
             while (orderRs.next()) {
                 Order order = new Order();
                 order.setOrderId(orderRs.getString("id"));
@@ -203,19 +192,51 @@ public class OrderDAO {
                 order.setTotalAmount(orderRs.getDouble("total_amount"));
                 order.setStatus(orderRs.getString("status"));
                 order.setOrderTime(orderRs.getTimestamp("order_time"));
-                
-                // 获取订单详情
                 order.setItems(getOrderItems(order.getOrderId()));
-                
                 orders.add(order);
             }
-            
         } catch (SQLException e) {
-            System.err.println("[OrderDAO] 获取所有订单失败: " + e.getMessage());
             e.printStackTrace();
         }
-        
         return orders;
     }
     
+    // 管理员按状态查订单
+    public static List<Order> getAllOrdersByStatus(String status) {
+        List<Order> orders = new ArrayList<>();
+        String orderSql = "SELECT id, username, total_amount, status, order_time FROM orders WHERE status = ? ORDER BY order_time DESC";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement orderPstmt = conn.prepareStatement(orderSql)) {
+            orderPstmt.setString(1, status);
+            try (ResultSet orderRs = orderPstmt.executeQuery()) {
+                while (orderRs.next()) {
+                    Order order = new Order();
+                    order.setOrderId(orderRs.getString("id"));
+                    order.setUsername(orderRs.getString("username"));
+                    order.setTotalAmount(orderRs.getDouble("total_amount"));
+                    order.setStatus(orderRs.getString("status"));
+                    order.setOrderTime(orderRs.getTimestamp("order_time"));
+                    order.setItems(getOrderItems(order.getOrderId()));
+                    orders.add(order);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return orders;
+    }
+    
+    // 订单总数
+    public static int getTotalOrderCount() {
+        String sql = "SELECT COUNT(*) as cnt FROM orders";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) return rs.getInt("cnt");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }

@@ -11,7 +11,6 @@ import java.util.Map;
 
 public class ProductDAOMySQL {
     
-    /** 根据分类获取商品 */
     public static List<Product> getProductsByCategory(String category) {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT id, name, category, icon, price FROM products WHERE category = ?";
@@ -19,13 +18,11 @@ public class ProductDAOMySQL {
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        
         try {
             conn = DBUtil.getConnection();
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, category);
             rs = pstmt.executeQuery();
-            
             while (rs.next()) {
                 Product product = new Product();
                 product.setId(rs.getString("id"));
@@ -36,30 +33,24 @@ public class ProductDAOMySQL {
                 products.add(product);
             }
         } catch (SQLException e) {
-            System.err.println("查询商品失败: " + e.getMessage());
             e.printStackTrace();
         } finally {
             DBUtil.close(conn);
             closeResource(pstmt, rs);
         }
-        
         return products;
     }
     
-    /** 根据ID获取商品 */
     public static Product getProductById(String productId) {
         String sql = "SELECT id, name, category, icon, price FROM products WHERE id = ?";
-        
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        
         try {
             conn = DBUtil.getConnection();
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, productId);
             rs = pstmt.executeQuery();
-            
             if (rs.next()) {
                 Product product = new Product();
                 product.setId(rs.getString("id"));
@@ -70,23 +61,18 @@ public class ProductDAOMySQL {
                 return product;
             }
         } catch (SQLException e) {
-            System.err.println("查询商品失败: " + e.getMessage());
             e.printStackTrace();
         } finally {
             DBUtil.close(conn);
             closeResource(pstmt, rs);
         }
-        
         return null;
     }
     
-    /** 添加商品 */
     public static boolean addProduct(Product product) {
         String sql = "INSERT INTO products (id, name, category, icon, price) VALUES (?, ?, ?, ?, ?)";
-        
         Connection conn = null;
         PreparedStatement pstmt = null;
-        
         try {
             conn = DBUtil.getConnection();
             pstmt = conn.prepareStatement(sql);
@@ -95,11 +81,9 @@ public class ProductDAOMySQL {
             pstmt.setString(3, product.getCategory());
             pstmt.setString(4, product.getIcon());
             pstmt.setDouble(5, product.getPrice());
-            
             int rows = pstmt.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
-            System.err.println("添加商品失败: " + e.getMessage());
             e.printStackTrace();
             return false;
         } finally {
@@ -108,7 +92,7 @@ public class ProductDAOMySQL {
         }
     }
     
-    /** 更新商品信息 */
+    // 动态拼SQL更新商品字段
     public static boolean updateProduct(String productId, String name, Double price, String icon) {
         StringBuilder sql = new StringBuilder("UPDATE products SET ");
         List<Object> params = new ArrayList<>();
@@ -125,31 +109,25 @@ public class ProductDAOMySQL {
             sql.append("icon = ?, ");
             params.add(icon);
         }
-        
-        // 无参数可更新
         if (params.isEmpty()) {
             return false;
         }
         
-        sql.setLength(sql.length() - 2);
+        sql.setLength(sql.length() - 2); // 去掉末尾逗号
         sql.append(" WHERE id = ?");
         params.add(productId);
         
         Connection conn = null;
         PreparedStatement pstmt = null;
-        
         try {
             conn = DBUtil.getConnection();
             pstmt = conn.prepareStatement(sql.toString());
-            
             for (int i = 0; i < params.size(); i++) {
                 pstmt.setObject(i + 1, params.get(i));
             }
-            
             int rows = pstmt.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
-            System.err.println("更新商品失败: " + e.getMessage());
             e.printStackTrace();
             return false;
         } finally {
@@ -158,22 +136,17 @@ public class ProductDAOMySQL {
         }
     }
     
-    /** 删除商品 */
     public static boolean deleteProduct(String productId) {
         String sql = "DELETE FROM products WHERE id = ?";
-        
         Connection conn = null;
         PreparedStatement pstmt = null;
-        
         try {
             conn = DBUtil.getConnection();
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, productId);
-            
             int rows = pstmt.executeUpdate();
             return rows > 0;
         } catch (SQLException e) {
-            System.err.println("删除商品失败: " + e.getMessage());
             e.printStackTrace();
             return false;
         } finally {
@@ -182,21 +155,18 @@ public class ProductDAOMySQL {
         }
     }
     
-    /** 搜索商品 */
+    // 按关键字模糊搜索
     public static List<Product> searchProducts(String keyword) {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT id, name, category, icon, price FROM products WHERE name LIKE ?";
-        
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        
         try {
             conn = DBUtil.getConnection();
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, "%" + keyword + "%");
             rs = pstmt.executeQuery();
-            
             while (rs.next()) {
                 Product product = new Product();
                 product.setId(rs.getString("id"));
@@ -207,17 +177,15 @@ public class ProductDAOMySQL {
                 products.add(product);
             }
         } catch (SQLException e) {
-            System.err.println("搜索商品失败: " + e.getMessage());
             e.printStackTrace();
         } finally {
             DBUtil.close(conn);
             closeResource(pstmt, rs);
         }
-        
         return products;
     }
     
-    /** 搜索商品（返回Map） */
+    // 搜索并封装成Map返回
     public static Map<String, Object> searchProductsWithResult(String keyword) {
         Map<String, Object> result = new HashMap<>();
         List<Map<String, Object>> foundProducts = new ArrayList<>();
@@ -229,7 +197,6 @@ public class ProductDAOMySQL {
         }
         
         List<Product> products = searchProducts(keyword);
-        
         for (Product product : products) {
             Map<String, Object> productInfo = new HashMap<>();
             productInfo.put("id", product.getId());
@@ -242,52 +209,39 @@ public class ProductDAOMySQL {
         
         result.put("found", !foundProducts.isEmpty());
         result.put("products", foundProducts);
-        
         return result;
     }
     
-    /** 统计商品被订购次数 */
+    // 统计某商品被买了多少次
     public static int getProductOrderCount(String productId) {
         String sql = "SELECT COALESCE(SUM(quantity), 0) as total FROM order_items WHERE product_id = ?";
-        
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        
         try {
             conn = DBUtil.getConnection();
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, productId);
             rs = pstmt.executeQuery();
-            
             if (rs.next()) {
                 return rs.getInt("total");
             }
         } catch (SQLException e) {
-            System.err.println("统计商品订单数量失败: " + e.getMessage());
             e.printStackTrace();
         } finally {
             DBUtil.close(conn);
             closeResource(pstmt, rs);
         }
-        
         return 0;
     }
     
+    // 关资源
     private static void closeResource(PreparedStatement pstmt, ResultSet rs) {
         if (rs != null) {
-            try {
-                rs.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            try { rs.close(); } catch (SQLException e) { e.printStackTrace(); }
         }
         if (pstmt != null) {
-            try {
-                pstmt.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            try { pstmt.close(); } catch (SQLException e) { e.printStackTrace(); }
         }
     }
 }

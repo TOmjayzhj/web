@@ -1,6 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
-    // 防护：禁止直接访问 login.jsp，必须通过 /login Servlet 统一入口
+    // 禁止直接访问login.jsp，必须通过 /login Servlet 入口
     if (request.getAttribute("jakarta.servlet.forward.servlet_path") == null
         && request.getAttribute("jakarta.servlet.include.servlet_path") == null) {
         response.sendRedirect(request.getContextPath() + "/login");
@@ -16,7 +16,6 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css">
     <title>用户登录</title>
     <style>
-        /* 登录页特有样式 - 全屏背景 */
         body {
             background: url('${pageContext.request.contextPath}/images/25815908_002835219086_2.jpg') no-repeat center center fixed;
             background-size: cover;
@@ -44,12 +43,13 @@
             transition: box-shadow 0.2s;
         }
         .login-container:hover {
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 14px 44px rgba(0, 0, 0, 0.28);
+            transform: translateY(-2px);
         }
         .login-header { text-align: center; margin-bottom: 24px; }
         .login-header .logo-icon { font-size: 42px; margin-bottom: 8px; }
         h2 { text-align: center; color: #2d3436; font-size: 22px; margin-bottom: 4px; font-weight: 600; }
-        .login-subtitle { text-align: center; color: #636e72; font-size: 13px; }
+        .login-subtitle { text-align: center; color: #636e72; font-size: 13px; margin-bottom: 16px; }
         .form-group { margin-bottom: 16px; }
         label { display: block; margin-bottom: 5px; color: #2d3436; font-size: 13px; font-weight: 600; }
         input[type="text"],
@@ -97,10 +97,11 @@
             font-size: 15px;
             font-family: inherit;
             font-weight: 600;
-            transition: background-color 0.15s;
+            transition: background-color 0.15s, transform 0.1s;
             margin-top: 4px;
         }
         button:hover { background-color: #357abd; }
+        button:active { background-color: #2c6aa0; transform: scale(0.98); }
         .toggle-link { text-align: center; margin-top: 18px; color: #636e72; font-size: 13px; }
         .toggle-link a { color: #4a90d9; text-decoration: none; cursor: pointer; font-weight: 600; }
         .toggle-link a:hover { color: #357abd; text-decoration: underline; }
@@ -142,7 +143,6 @@
             } 
         %>
         
-        <!-- 登录表单 -->
         <form id="loginForm" action="${pageContext.request.contextPath}/login" method="post">
             <div class="form-group">
                 <label for="loginUsername">用户名:</label>
@@ -155,7 +155,6 @@
             <button type="submit">登录</button>
         </form>
         
-        <!-- 注册表单 -->
         <form id="registerForm" class="hidden" action="${pageContext.request.contextPath}/register" method="post">
             <div class="form-group">
                 <label for="regUsername">用户名:</label>
@@ -203,7 +202,7 @@
             if (accountInfo) accountInfo.classList.remove('hidden');
         }
         
-        // 如果有注册相关错误，自动显示注册表单
+        // 注册相关错误时自动显示注册表单
         <% if ("true".equals(String.valueOf(request.getAttribute("showRegister")))) { %>
             showRegister();
         <% } %>

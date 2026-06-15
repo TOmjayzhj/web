@@ -2,6 +2,7 @@ package common.example.servlet;
 
 import common.example.dao.CartDAO;
 import common.example.dao.OrderDAO;
+import common.example.dao.UserDAO;
 import common.example.model.CartItem;
 import common.example.model.Order;
 import common.example.model.OrderItem;
@@ -37,26 +38,26 @@ public class OrderServlet extends HttpServlet {
         String role = (String) session.getAttribute("role");
         String username = (String) session.getAttribute("username");
         String action = request.getParameter("action");
-        
-        if (action == null) {
-            action = "list";
-        }
+        if (action == null) action = "list";
         
         PrintWriter out = response.getWriter();
         
-        // 管理员订单管理
+        // 管理员看全部订单
         if ("admin".equals(role)) {
             switch (action) {
                 case "list":
-                    List<Order> allOrders = OrderDAO.getAllOrders();
-                    out.print(convertOrdersToJson(allOrders));
+                    String adminStatus = request.getParameter("status");
+                    List<Order> adminOrders;
+                    if (adminStatus != null && !adminStatus.isEmpty() && !"all".equals(adminStatus)) {
+                        adminOrders = OrderDAO.getAllOrdersByStatus(adminStatus);
+                    } else {
+                        adminOrders = OrderDAO.getAllOrders();
+                    }
+                    out.print(convertOrdersToJson(adminOrders));
                     break;
-                    
                 case "count":
-                    int allOrderCount = OrderDAO.getAllOrders().size();
-                    out.print("{\"count\":" + allOrderCount + "}");
+                    out.print("{\"count\":" + OrderDAO.getTotalOrderCount() + "}");
                     break;
-                    
                 default:
                     response.setStatus(400);
                     out.print("{\"error\":\"未知操作\"}");
@@ -66,18 +67,22 @@ public class OrderServlet extends HttpServlet {
             return;
         }
         
-        // 普通用户订单查询
+        // 普通用户只看自己的
         if (action.equals("list")) {
-            List<Order> orders = OrderDAO.getUserOrders(username);
-            out.print(convertOrdersToJson(orders));
+            String userStatus = request.getParameter("status");
+            List<Order> userOrders;
+            if (userStatus != null && !userStatus.isEmpty() && !"all".equals(userStatus)) {
+                userOrders = OrderDAO.getUserOrdersByStatus(username, userStatus);
+            } else {
+                userOrders = OrderDAO.getUserOrders(username);
+            }
+            out.print(convertOrdersToJson(userOrders));
         } else if (action.equals("count")) {
-            int orderCount = OrderDAO.getUserOrders(username).size();
-            out.print("{\"count\":" + orderCount + "}");
+            out.print("{\"count\":" + UserDAO.getUserOrderCount(username) + "}");
         } else {
             response.setStatus(400);
             out.print("{\"error\":\"未知操作\"}");
         }
-        
         out.flush();
     }
     
@@ -107,7 +112,7 @@ public class OrderServlet extends HttpServlet {
         
         PrintWriter out = response.getWriter();
         
-        // 管理员订单操作
+        // 管理员发货/完成/退款/取消订单
         if ("admin".equals(role)) {
             switch (action) {
                 case "ship":
@@ -117,11 +122,9 @@ public class OrderServlet extends HttpServlet {
                         out.print("{\"error\":\"缺少订单ID\"}");
                         break;
                     }
-                    
                     OrderDAO.updateOrderStatus(orderId, "已发货");
                     out.print("{\"success\":true,\"message\":\"发货成功\"}");
                     break;
-                    
                 case "complete":
                     String completeOrderId = request.getParameter("orderId");
                     if (completeOrderId == null || completeOrderId.isEmpty()) {
@@ -129,11 +132,39 @@ public class OrderServlet extends HttpServlet {
                         out.print("{\"error\":\"缺少订单ID\"}");
                         break;
                     }
-                    
                     OrderDAO.updateOrderStatus(completeOrderId, "已完成");
                     out.print("{\"success\":true,\"message\":\"订单已完成\"}");
                     break;
-                    
+                case "receive":
+                    String receiveOrderId = request.getParameter("orderId");
+                    if (receiveOrderId == null || receiveOrderId.isEmpty()) {
+                        response.setStatus(400);
+                        out.print("{\"error\":\"缺少订单ID\"}");
+                        break;
+                    }
+                    OrderDAO.updateOrderStatus(receiveOrderId, "已收货");
+                    out.print("{\"success\":true,\"message\":\"已确认收货\"}");
+                    break;
+                case "refund":
+                    String refundOrderId = request.getParameter("orderId");
+                    if (refundOrderId == null || refundOrderId.isEmpty()) {
+                        response.setStatus(400);
+                        out.print("{\"error\":\"缺少订单ID\"}");
+                        break;
+                    }
+                    OrderDAO.updateOrderStatus(refundOrderId, "已退款");
+                    out.print("{\"success\":true,\"message\":\"已退款\"}");
+                    break;
+                case "cancel":
+                    String cancelOrderId = request.getParameter("orderId");
+                    if (cancelOrderId == null || cancelOrderId.isEmpty()) {
+                        response.setStatus(400);
+                        out.print("{\"error\":\"缺少订单ID\"}");
+                        break;
+                    }
+                    OrderDAO.updateOrderStatus(cancelOrderId, "已取消");
+                    out.print("{\"success\":true,\"message\":\"订单已取消\"}");
+                    break;
                 default:
                     response.setStatus(400);
                     out.print("{\"error\":\"未知操作\"}");
@@ -143,39 +174,42 @@ public class OrderServlet extends HttpServlet {
             return;
         }
         
-        // 普通用户订单操作
+        // 普通用户结账/取消订单
         switch (action) {
             case "checkout":
                 List<CartItem> cartItems = CartDAO.getCart(username);
-                
                 if (cartItems == null || cartItems.isEmpty()) {
                     response.setStatus(400);
                     out.print("{\"error\":\"购物车为空\"}");
                     break;
                 }
-                
                 Order order = OrderDAO.createOrder(username, cartItems);
-                
                 if (order != null) {
-                    CartDAO.clearCart(username);
-                    
                     out.print("{\"success\":true,\"message\":\"订单创建成功\",\"orderId\":\"" + order.getOrderId() + "\"}");
                 } else {
                     response.setStatus(500);
                     out.print("{\"error\":\"订单创建失败\"}");
                 }
                 break;
-                
+            case "cancel":
+                String cancelOrderId = request.getParameter("orderId");
+                if (cancelOrderId == null || cancelOrderId.isEmpty()) {
+                    response.setStatus(400);
+                    out.print("{\"error\":\"缺少订单ID\"}");
+                    break;
+                }
+                OrderDAO.updateOrderStatus(cancelOrderId, "已取消");
+                out.print("{\"success\":true,\"message\":\"订单已取消\"}");
+                break;
             default:
                 response.setStatus(400);
                 out.print("{\"error\":\"未知操作\"}");
                 break;
         }
-        
         out.flush();
     }
     
-    /** 订单列表转JSON */
+    // 把订单列表转成JSON
     private String convertOrdersToJson(List<Order> orders) {
         StringBuilder json = new StringBuilder();
         json.append("{");
@@ -205,23 +239,14 @@ public class OrderServlet extends HttpServlet {
                 json.append("\"quantity\":").append(item.getQuantity()).append(",");
                 json.append("\"subtotal\":").append(String.format("%.2f", item.getSubtotal()));
                 json.append("}");
-                
-                if (j < items.size() - 1) {
-                    json.append(",");
-                }
+                if (j < items.size() - 1) json.append(",");
             }
             
-            json.append("]");
-            json.append("}");
-            
-            if (i < orders.size() - 1) {
-                json.append(",");
-            }
+            json.append("]}");
+            if (i < orders.size() - 1) json.append(",");
         }
         
-        json.append("]");
-        json.append("}");
-        
+        json.append("]}");
         return json.toString();
     }
 }

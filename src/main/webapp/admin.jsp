@@ -1,7 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <% 
-    // 检查用户是否已登录且是管理员
-    if (session.getAttribute("username") == null || !"admin".equals(session.getAttribute("role"))) {
+    if (session == null || session.getAttribute("username") == null || !"admin".equals(session.getAttribute("role"))) {
         response.sendRedirect(request.getContextPath() + "/login");
         return;
     }
@@ -15,7 +14,6 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css">
     <title>商品管理后台</title>
     <style>
-        /* 页面特定补充 */
         .add-product-btn {
             padding: 9px 18px;
             background-color: #27ae60;
@@ -28,8 +26,8 @@
             transition: background-color 0.15s;
         }
         .add-product-btn:hover { background-color: #219a52; }
+        .add-product-btn:active { background-color: #1b8a47; transform: scale(0.97); }
         
-        /* 用户管理页面 */
         .user-management { display: none; }
         .user-management.active { display: block; }
         
@@ -55,7 +53,8 @@
             font-size: 13px;
             color: #2d3436;
         }
-        .user-table tr:hover { background-color: #f8fafc; }
+        .user-table tr:nth-child(even) { background-color: #fafbfc; }
+        .user-table tr:hover { background-color: #f0f4f8; }
         .user-table tr:last-child td { border-bottom: none; }
         
         .role-badge {
@@ -89,29 +88,104 @@
             transition: opacity 0.15s;
         }
         .view-reviews-btn:hover { opacity: 0.85; }
+        .view-reviews-btn:active { opacity: 0.7; }
+
+        .delete-user-btn {
+            padding: 5px 10px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: opacity 0.15s;
+        }
+        .delete-user-btn:hover { opacity: 0.85; }
+        .delete-user-btn:active { opacity: 0.7; }
+
+        .order-tabs {
+            display: flex;
+            gap: 0;
+            background: #fff;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
+            overflow: hidden;
+        }
+        .order-tab {
+            flex: 1;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 13px;
+            color: #636e72;
+            cursor: pointer;
+            transition: all 0.15s;
+            border-bottom: 2px solid transparent;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            font-weight: 500;
+        }
+        .order-tab:hover {
+            background-color: #f8fafc;
+            color: #2d3436;
+        }
+        .order-tab.active {
+            color: #4a90d9;
+            border-bottom-color: #4a90d9;
+            background-color: #f8fafc;
+        }
+        .status-unpaid { background-color: #fff3cd; color: #856404; }
+        .status-received { background-color: #cce5ff; color: #004085; }
+        .status-refunded { background-color: #f8d7da; color: #721c24; }
+        .status-closed { background-color: #e2e3e5; color: #383d41; }
+        .refund-btn {
+            padding: 5px 12px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: opacity 0.15s;
+        }
+        .refund-btn:hover { opacity: 0.85; }
+        .cancel-btn {
+            padding: 5px 12px;
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: opacity 0.15s;
+        }
+        .cancel-btn:hover { opacity: 0.85; }
+        .stat-card.received { border-left-color: #3498db; }
+        .stat-card.refunded { border-left-color: #e74c3c; }
+        .stat-card.closed { border-left-color: #95a5a6; }
     </style>
 </head>
 <body>
-    <!-- 提示消息容器 -->
     <div id="toast" class="toast"></div>
     
     <div class="container">
-        <!-- 顶部搜索栏 -->
         <header class="header">
-            <div class="logo">商品管理后台</div>
+            <div class="logo">商店管理后台</div>
             <div class="search-container">
                 <input type="text" id="searchBox" class="search-box" placeholder="搜索商品..." onkeypress="if(event.keyCode==13) searchProducts()">
-                <button class="search-btn" onclick="searchProducts()">🔍</button>
+                <button class="search-btn" onclick="searchProducts()">&#128269;</button>
             </div>
             <div class="header-icons">
                 <span class="admin-badge">管理员模式</span>
                 <div class="icon-btn user-dropdown" onclick="toggleUserMenu()">
-                    <span>👤</span>
+                    <span>&#128100;</span>
                     <span>${sessionScope.username}</span>
-                    <!-- 用户下拉菜单 -->
                     <div id="userMenu" class="user-menu">
                         <div class="user-menu-header">
-                            <div class="user-avatar">👤</div>
+                            <div class="user-avatar">&#128100;</div>
                             <div class="user-menu-info">
                                 <div class="user-menu-name">${sessionScope.username}</div>
                                 <div class="user-menu-role">管理员</div>
@@ -126,10 +200,7 @@
             </div>
         </header>
         
-        <!-- 左侧分类导航 -->
         <nav class="sidebar">
-            <div class="nav-title">管理菜单</div>
-            <a href="#" class="nav-item active" data-section="product">商品管理</a>
             <a href="#" class="nav-item" data-section="order">订单管理</a>
             <a href="#" class="nav-item" data-section="user">用户管理</a>
             <div class="nav-title" style="margin-top: 12px;">商品分类</div>
@@ -145,20 +216,16 @@
             <a href="#" class="nav-item" data-category="hardware">五金工具</a>
         </nav>
         
-        <!-- 主内容区 -->
         <main class="main-content">
-            <!-- 商品管理区域 -->
             <div class="product-management" id="productManagement">
                 <div class="content-header">
                     <h2 id="categoryTitle">手机数码</h2>
-                    <button class="add-product-btn" onclick="showAddModal()">➕ 添加商品</button>
+                    <button class="add-product-btn" onclick="showAddModal()">添加商品</button>
                 </div>
                 <div class="product-grid" id="productGrid">
-                    <!-- 商品会通过JavaScript动态加载 -->
                 </div>
             </div>
             
-            <!-- 用户管理区域 -->
             <div class="user-management" id="userManagement">
                 <div class="content-header">
                     <h2>用户管理</h2>
@@ -172,6 +239,7 @@
                                 <th>订单数量</th>
                                 <th>消费金额</th>
                                 <th>评价数量</th>
+                                <th>偏好商品类</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
@@ -181,40 +249,44 @@
                 </div>
             </div>
             
-            <!-- 订单管理区域 -->
             <div class="order-management" id="orderManagement">
                 <div class="content-header">
                     <h2>订单管理</h2>
                 </div>
                 
-                <!-- 订单汇总 -->
+                <div class="order-tabs">
+                    <button class="order-tab active" data-admin-status="all" onclick="switchOrderTab(this, 'all')">首页</button>
+                    <button class="order-tab" data-admin-status="待发货" onclick="switchOrderTab(this, '待发货')">已付款</button>
+                    <button class="order-tab" data-admin-status="已发货" onclick="switchOrderTab(this, '已发货')">已发货</button>
+                    <button class="order-tab" data-admin-status="已收货" onclick="switchOrderTab(this, '已收货')">已收货</button>
+                </div>
+                
                 <div class="order-summary">
-                    <h3>📊 订单汇总</h3>
+                    <h3>订单汇总</h3>
                     <div class="order-stats">
                         <div class="stat-card">
                             <div class="stat-number" id="totalOrders">0</div>
                             <div class="stat-label">总订单数</div>
                         </div>
                         <div class="stat-card pending">
-                            <div class="stat-number" id="pendingOrders">0</div>
-                            <div class="stat-label">待发货</div>
+                            <div class="stat-number" id="paidOrders">0</div>
+                            <div class="stat-label">已付款</div>
                         </div>
                         <div class="stat-card shipped">
                             <div class="stat-number" id="shippedOrders">0</div>
                             <div class="stat-label">已发货</div>
                         </div>
-                        <div class="stat-card completed">
-                            <div class="stat-number" id="completedOrders">0</div>
-                            <div class="stat-label">已完成</div>
+                        <div class="stat-card received">
+                            <div class="stat-number" id="receivedOrders">0</div>
+                            <div class="stat-label">已收货</div>
                         </div>
-                        <div class="stat-card revenue">
-                            <div class="stat-number" id="totalRevenue" style="font-size: 22px;">￥0.00</div>
-                            <div class="stat-label">已发货订单金额</div>
+                        <div class="stat-card total-revenue">
+                            <div class="stat-number" id="totalRevenueAll" style="font-size: 22px;">￥0.00</div>
+                            <div class="stat-label">总收益</div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- 订单列表 -->
                 <div class="order-table">
                     <table>
                         <thead>
@@ -229,7 +301,6 @@
                             </tr>
                         </thead>
                         <tbody id="orderTableBody">
-                            <!-- 订单会通过JavaScript动态加载 -->
                         </tbody>
                     </table>
                 </div>
@@ -237,7 +308,6 @@
         </main>
     </div>
     
-    <!-- 添加/编辑商品模态框 -->
     <div id="productModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -284,7 +354,6 @@
         </div>
     </div>
     
-    <!-- 查看评价模态框 -->
     <div id="reviewModal" class="modal">
         <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header">
@@ -302,7 +371,6 @@
                 </div>
             </div>
             <div id="reviewList" style="max-height: 500px; overflow-y: auto;">
-                <!-- 评价会通过JavaScript动态加载 -->
             </div>
         </div>
     </div>
@@ -310,9 +378,8 @@
     <script>
         let products = {};
         let currentCategory = 'phone';
-        let currentSection = 'product'; // 'product' 或 'order'
-        
-        // 获取分类名称
+        let currentSection = 'product';
+
         function getCategoryName(category) {
             var categoryNames = {
                 'phone': '手机数码',
@@ -328,8 +395,7 @@
             };
             return categoryNames[category] || '热门商品';
         }
-        
-        // 显示提示消息
+
         function showToast(message, type) {
             type = type || 'success';
             var toast = document.getElementById('toast');
@@ -344,8 +410,7 @@
                 toast.classList.remove('show');
             }, 2000);
         }
-        
-        // 加载商品数据
+
         function loadProducts(category) {
             currentCategory = category;
             var contextPath = '${pageContext.request.contextPath}';
@@ -372,31 +437,25 @@
                 })
                 .catch(function(error) {
                     console.error('加载商品数据失败:', error);
-                    showToast('✗ 加载失败', 'error');
+                    showToast('加载失败', 'error');
                 });
         }
-        
-        // 切换到指定分类
+
         function switchCategory(category) {
-            // 更新当前分类
             currentCategory = category;
-            
-            // 更新导航栏高亮
+
             document.querySelectorAll('.nav-item[data-category]').forEach(function(item) {
                 item.classList.remove('active');
                 if (item.getAttribute('data-category') === category) {
                     item.classList.add('active');
                 }
             });
-            
-            // 加载商品数据
+
             loadProducts(category);
-            
-            // 更新标题
+
             document.getElementById('categoryTitle').textContent = getCategoryName(category);
         }
-        
-        // 渲染商品
+
         function renderProducts(category) {
             const grid = document.getElementById('productGrid');
             const categoryProducts = products[category];
@@ -427,8 +486,7 @@
             
             grid.innerHTML = html;
         }
-        
-        // 显示添加模态框
+
         function showAddModal() {
             document.getElementById('modalTitle').textContent = '添加商品';
             document.getElementById('productForm').reset();
@@ -437,8 +495,7 @@
             document.getElementById('productCategory').value = currentCategory;
             document.getElementById('productModal').classList.add('show');
         }
-        
-        // 显示编辑模态框
+
         function showEditModal(productId) {
             const product = products[currentCategory].find(p => p.id === productId);
             if (!product) return;
@@ -453,23 +510,20 @@
             document.getElementById('productPrice').value = product.price;
             document.getElementById('productModal').classList.add('show');
         }
-        
-        // 关闭模态框
+
         function closeModal() {
             document.getElementById('productModal').classList.remove('show');
         }
-        
-        // 表单提交
+
         document.getElementById('productForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             const editId = document.getElementById('editProductId').value;
             const contextPath = '${pageContext.request.contextPath}';
-            
+
             let url, params;
-            
+
             if (editId) {
-                // 编辑模式
                 url = contextPath + '/products';
                 params = new URLSearchParams();
                 params.append('action', 'update');
@@ -478,7 +532,6 @@
                 params.append('price', document.getElementById('productPrice').value);
                 params.append('icon', document.getElementById('productIcon').value);
             } else {
-                // 添加模式
                 url = contextPath + '/products';
                 params = new URLSearchParams();
                 params.append('action', 'add');
@@ -501,20 +554,19 @@
             })
             .then(function(data) {
                 if (data.success) {
-                    showToast('✓ ' + data.message, 'success');
+                    showToast(data.message, 'success');
                     closeModal();
                     loadProducts(currentCategory);
                 } else {
-                    showToast('✗ ' + data.error, 'error');
+                    showToast(data.error, 'error');
                 }
             })
             .catch(function(error) {
                 console.error('操作失败:', error);
-                showToast('✗ 操作失败', 'error');
+                showToast('操作失败', 'error');
             });
         });
-        
-        // 删除商品
+
         function deleteProduct(productId) {
             if (!confirm('确定要删除该商品吗？')) {
                 return;
@@ -537,32 +589,29 @@
             })
             .then(function(data) {
                 if (data.success) {
-                    showToast('✓ ' + data.message, 'success');
+                    showToast(data.message, 'success');
                     loadProducts(currentCategory);
                 } else {
-                    showToast('✗ ' + data.error, 'error');
+                    showToast(data.error, 'error');
                 }
             })
             .catch(function(error) {
                 console.error('删除失败:', error);
-                showToast('✗ 删除失败', 'error');
+                showToast('删除失败', 'error');
             });
         }
-        
-        // 显示评价模态框
+
         function showReviewsModal(productId, productName) {
             document.getElementById('reviewModalTitle').textContent = '商品评价 - ' + productName;
             document.getElementById('reviewModal').classList.add('show');
             loadReviews(productId);
         }
-        
-        // 关闭评价模态框
+
         function closeReviewModal() {
             document.getElementById('reviewModal').classList.remove('show');
             document.getElementById('reviewSummary').style.display = '';
         }
-        
-        // 加载评价数据
+
         function loadReviews(productId) {
             const contextPath = '${pageContext.request.contextPath}';
             fetch(contextPath + '/review?productId=' + encodeURIComponent(productId))
@@ -571,23 +620,20 @@
                 })
                 .then(function(data) {
                     if (data.success) {
-                        // 更新评价摘要
                         document.getElementById('avgRating').textContent = data.avgRating.toFixed(1);
                         document.getElementById('reviewCount').textContent = data.reviewCount;
-                        
-                        // 渲染评价列表
+
                         renderReviews(data.reviews, productId);
                     } else {
-                        showToast('✗ 加载评价失败', 'error');
+                        showToast('加载评价失败', 'error');
                     }
                 })
                 .catch(function(error) {
                     console.error('加载评价失败:', error);
-                    showToast('✗ 加载评价失败', 'error');
+                    showToast('加载评价失败', 'error');
                 });
         }
-        
-        // 渲染评价列表
+
         function renderReviews(reviews, productId) {
             const reviewList = document.getElementById('reviewList');
             
@@ -616,8 +662,7 @@
             
             reviewList.innerHTML = html;
         }
-        
-        // 删除评价
+
         function deleteReview(reviewId, productId) {
             if (!confirm('确定要删除该评价吗？')) {
                 return;
@@ -640,31 +685,34 @@
             })
             .then(function(data) {
                 if (data.success) {
-                    showToast('✓ ' + data.message, 'success');
-                    // 重新加载评价
+                    showToast(data.message, 'success');
                     loadReviews(productId);
                 } else {
-                    showToast('✗ ' + data.message, 'error');
+                    showToast(data.message, 'error');
                 }
             })
             .catch(function(error) {
                 console.error('删除评价失败:', error);
-                showToast('✗ 删除评价失败', 'error');
+                showToast('删除评价失败', 'error');
             });
         }
-        
-        // HTML转义函数
+
         function escapeHtml(text) {
             if (!text) return '';
             const div = document.createElement('div');
             div.appendChild(document.createTextNode(text));
             return div.innerHTML;
         }
-        
-        // 加载订单数据
+
+        var currentOrderStatus = 'all';
+
         function loadOrders() {
             const contextPath = '${pageContext.request.contextPath}';
-            fetch(contextPath + '/order?action=list')
+            var url = contextPath + '/order?action=list';
+            if (currentOrderStatus !== 'all') {
+                url += '&status=' + encodeURIComponent(currentOrderStatus);
+            }
+            fetch(url)
                 .then(function(response) {
                     if (!response.ok) {
                         throw new Error('网络响应失败');
@@ -672,43 +720,62 @@
                     return response.json();
                 })
                 .then(function(data) {
-                    renderOrderSummary(data.orders);
+                    // 汇总统计需要基于全部订单数据，所以如果当前是筛选状态，额外请求一次全量
+                    if (currentOrderStatus !== 'all') {
+                        fetch(contextPath + '/order?action=list')
+                            .then(function(r) { return r.json(); })
+                            .then(function(allData) {
+                                renderOrderSummary(allData.orders);
+                            });
+                    } else {
+                        renderOrderSummary(data.orders);
+                    }
                     renderOrderTable(data.orders);
                 })
                 .catch(function(error) {
                     console.error('加载订单数据失败:', error);
-                    showToast('✗ 加载订单失败', 'error');
+                    showToast('加载订单失败', 'error');
                 });
         }
-        
-        // 渲染订单汇总
+
+        function switchOrderTab(el, status) {
+            document.querySelectorAll('.order-tab').forEach(function(t) {
+                t.classList.remove('active');
+            });
+            el.classList.add('active');
+            currentOrderStatus = status;
+            loadOrders();
+        }
+
         function renderOrderSummary(orders) {
             let total = orders.length;
-            let pending = 0;
+            let paid = 0;
             let shipped = 0;
-            let completed = 0;
-            let shippedRevenue = 0;
+            let received = 0;
+            let totalRevenue = 0;
             
             for (let i = 0; i < orders.length; i++) {
                 const status = orders[i].status;
+                const amount = parseFloat(orders[i].totalAmount) || 0;
                 if (status === '待发货') {
-                    pending++;
+                    paid++;
+                    totalRevenue += amount;
                 } else if (status === '已发货') {
                     shipped++;
-                    shippedRevenue += parseFloat(orders[i].totalAmount) || 0;
-                } else if (status === '已完成') {
-                    completed++;
+                    totalRevenue += amount;
+                } else if (status === '已收货' || status === '已完成') {
+                    received++;
+                    totalRevenue += amount;
                 }
             }
             
             document.getElementById('totalOrders').textContent = total;
-            document.getElementById('pendingOrders').textContent = pending;
+            document.getElementById('paidOrders').textContent = paid;
             document.getElementById('shippedOrders').textContent = shipped;
-            document.getElementById('completedOrders').textContent = completed;
-            document.getElementById('totalRevenue').textContent = '￥' + shippedRevenue.toFixed(2);
+            document.getElementById('receivedOrders').textContent = received;
+            document.getElementById('totalRevenueAll').textContent = '￥' + totalRevenue.toFixed(2);
         }
-        
-        // 渲染订单表格
+
         function renderOrderTable(orders) {
             const tbody = document.getElementById('orderTableBody');
             
@@ -720,10 +787,16 @@
             let html = '';
             for (let i = 0; i < orders.length; i++) {
                 const order = orders[i];
-                const statusClass = order.status === '待发货' ? 'status-pending' : 
-                                   order.status === '已发货' ? 'status-shipped' : 'status-completed';
+                let statusClass = 'status-pending';
+                let statusLabel = order.status;
+                if (order.status === '待发货') statusClass = 'status-pending';
+                else if (order.status === '已发货') statusClass = 'status-shipped';
+                else if (order.status === '已收货' || order.status === '已完成') statusClass = 'status-completed';
+                else if (order.status === '已退款') statusClass = 'status-refunded';
+                else if (order.status === '已关闭') { statusClass = 'status-closed'; statusLabel = '已取消'; }
+                else if (order.status === '已取消') statusClass = 'status-closed';
+                else if (order.status === '待付款') statusClass = 'status-unpaid';
                 
-                // 商品明细
                 let itemsText = '';
                 if (order.items && order.items.length > 0) {
                     const itemNames = order.items.map(function(item) {
@@ -732,14 +805,20 @@
                     itemsText = itemNames.join(', ');
                 }
                 
-                // 发货按钮
-                let shipButton = '';
+                let actionBtn = '';
                 if (order.status === '待发货') {
-                    shipButton = '<button class="ship-btn" onclick="shipOrder(\'' + order.orderId + '\')">发货</button>';
+                    actionBtn = '<button class="ship-btn" onclick="shipOrder(\'' + order.orderId + '\')">发货</button>';
+                    actionBtn += ' <button class="refund-btn" onclick="refundOrder(\'' + order.orderId + '\')">退款</button>';
                 } else if (order.status === '已发货') {
-                    shipButton = '<button class="ship-btn" onclick="completeOrder(\'' + order.orderId + '\')">完成</button>';
+                    actionBtn = '<button class="ship-btn" onclick="receiveOrder(\'' + order.orderId + '\')">确认收货</button>';
+                    actionBtn += ' <button class="refund-btn" onclick="refundOrder(\'' + order.orderId + '\')">退款</button>';
+                } else if (order.status === '已收货') {
+                    actionBtn = '<button class="ship-btn" onclick="completeOrder(\'' + order.orderId + '\')">完成</button>';
+                    actionBtn += ' <button class="cancel-btn" onclick="cancelOrder(\'' + order.orderId + '\')">取消</button>';
+                } else if (order.status === '已完成') {
+                    actionBtn = '<button class="cancel-btn" onclick="cancelOrder(\'' + order.orderId + '\')">取消</button>';
                 } else {
-                    shipButton = '<span style="color: #95a5a6;">已完成</span>';
+                    actionBtn = '<span style="color: #95a5a6;">' + statusLabel + '</span>';
                 }
                 
                 html += '<tr>';
@@ -747,16 +826,15 @@
                 html += '  <td>' + escapeHtml(order.username) + '</td>';
                 html += '  <td>' + order.orderTime + '</td>';
                 html += '  <td>￥' + parseFloat(order.totalAmount).toFixed(2) + '</td>';
-                html += '  <td><span class="status-badge ' + statusClass + '">' + order.status + '</span></td>';
+                html += '  <td><span class="status-badge ' + statusClass + '">' + statusLabel + '</span></td>';
                 html += '  <td class="order-items-detail">' + escapeHtml(itemsText) + '</td>';
-                html += '  <td>' + shipButton + '</td>';
+                html += '  <td>' + actionBtn + '</td>';
                 html += '</tr>';
             }
             
             tbody.innerHTML = html;
         }
-        
-        // 发货
+
         function shipOrder(orderId) {
             if (!confirm('确定要发货该订单吗？')) {
                 return;
@@ -779,20 +857,18 @@
             })
             .then(function(data) {
                 if (data.success) {
-                    showToast('✓ ' + data.message, 'success');
-                    // 重新加载订单
+                    showToast(data.message, 'success');
                     loadOrders();
                 } else {
-                    showToast('✗ ' + data.error, 'error');
+                    showToast(data.error, 'error');
                 }
             })
             .catch(function(error) {
                 console.error('发货失败:', error);
-                showToast('✗ 发货失败', 'error');
+                showToast('发货失败', 'error');
             });
         }
-        
-        // 完成订单
+
         function completeOrder(orderId) {
             if (!confirm('确定要完成该订单吗？')) {
                 return;
@@ -815,20 +891,102 @@
             })
             .then(function(data) {
                 if (data.success) {
-                    showToast('✓ ' + data.message, 'success');
-                    // 重新加载订单
+                    showToast(data.message, 'success');
                     loadOrders();
                 } else {
-                    showToast('✗ ' + data.error, 'error');
+                    showToast(data.error, 'error');
                 }
             })
             .catch(function(error) {
                 console.error('完成订单失败:', error);
-                showToast('✗ 完成订单失败', 'error');
+                showToast('完成订单失败', 'error');
             });
         }
-        
-        // 切换管理区域
+
+        function receiveOrder(orderId) {
+            if (!confirm('确定该订单已收货吗？')) return;
+            
+            var contextPath = '${pageContext.request.contextPath}';
+            var params = new URLSearchParams();
+            params.append('action', 'receive');
+            params.append('orderId', orderId);
+            
+            fetch(contextPath + '/order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString()
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    loadOrders();
+                } else {
+                    showToast(data.error || '操作失败', 'error');
+                }
+            })
+            .catch(function(error) {
+                console.error('确认收货失败:', error);
+                showToast('确认收货失败', 'error');
+            });
+        }
+
+        function refundOrder(orderId) {
+            if (!confirm('确定要退款该订单吗？')) return;
+            
+            var contextPath = '${pageContext.request.contextPath}';
+            var params = new URLSearchParams();
+            params.append('action', 'refund');
+            params.append('orderId', orderId);
+            
+            fetch(contextPath + '/order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString()
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    loadOrders();
+                } else {
+                    showToast(data.error || '退款失败', 'error');
+                }
+            })
+            .catch(function(error) {
+                console.error('退款失败:', error);
+                showToast('退款失败', 'error');
+            });
+        }
+
+        function cancelOrder(orderId) {
+            if (!confirm('确定要取消该订单吗？')) return;
+            
+            var contextPath = '${pageContext.request.contextPath}';
+            var params = new URLSearchParams();
+            params.append('action', 'cancel');
+            params.append('orderId', orderId);
+            
+            fetch(contextPath + '/order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString()
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    loadOrders();
+                } else {
+                    showToast(data.error || '取消失败', 'error');
+                }
+            })
+            .catch(function(error) {
+                console.error('取消订单失败:', error);
+                showToast('取消订单失败', 'error');
+            });
+        }
+
         function switchSection(section) {
             currentSection = section;
             
@@ -840,22 +998,25 @@
                 document.getElementById('productManagement').classList.remove('hidden');
             } else if (section === 'order') {
                 document.getElementById('orderManagement').classList.add('active');
+                currentOrderStatus = 'all';
+                document.querySelectorAll('.order-tab').forEach(function(t) {
+                    t.classList.remove('active');
+                });
+                document.querySelector('.order-tab[data-admin-status="all"]').classList.add('active');
                 loadOrders();
             } else if (section === 'user') {
                 document.getElementById('userManagement').classList.add('active');
                 loadUsers();
             }
         }
-        
-        // 切换用户菜单显示/隐藏
+
         function toggleUserMenu() {
             var userMenu = document.getElementById('userMenu');
             if (userMenu) {
                 userMenu.classList.toggle('show');
             }
         }
-        
-        // 点击其他地方关闭用户菜单
+
         document.addEventListener('click', function(e) {
             var userDropdown = document.querySelector('.user-dropdown');
             var userMenu = document.getElementById('userMenu');
@@ -864,8 +1025,7 @@
                 userMenu.classList.remove('show');
             }
         });
-        
-        // 搜索商品功能
+
         function searchProducts() {
             var searchBox = document.getElementById('searchBox');
             var keyword = searchBox.value.trim();
@@ -875,29 +1035,20 @@
                 return;
             }
             
-            console.log('开始搜索:', keyword);
-            
-            // 切换到商品管理区域
             switchSection('product');
-            
-            // 调用后端搜索API
+
             var contextPath = '${pageContext.request.contextPath}';
             var url = contextPath + '/products?keyword=' + encodeURIComponent(keyword);
             
-            console.log('请求URL:', url);
-            
             fetch(url)
                 .then(function(response) {
-                    console.log('响应状态:', response.status);
                     if (!response.ok) {
                         throw new Error('网络响应失败: ' + response.status);
                     }
                     return response.json();
                 })
                 .then(function(data) {
-                    console.log('搜索返回数据:', data);
                     if (data.found && data.products.length > 0) {
-                        // 转换搜索结果格式
                         var searchResults = data.products.map(function(p) {
                             return {
                                 id: p.id,
@@ -908,30 +1059,23 @@
                             };
                         });
                         
-                        // 存储搜索结果
                         products['search'] = searchResults;
-                        
-                        // 切换当前分类为搜索，使编辑/删除能正确找到商品
                         currentCategory = 'search';
-                        
-                        // 更新标题
+
                         document.getElementById('categoryTitle').textContent = 
                             '搜索结果（找到 ' + data.products.length + ' 件商品）';
-                        
-                        // 清除分类导航的激活状态
+
                         document.querySelectorAll('.nav-item[data-category]').forEach(nav => {
                             nav.classList.remove('active');
                         });
-                        
-                        // 显示搜索结果
+
                         renderProducts('search');
                         
-                        showToast('✓ 找到 ' + data.products.length + ' 件商品', 'success');
+                        showToast('找到 ' + data.products.length + ' 件商品', 'success');
                     } else {
-                        // 未找到商品
                         document.getElementById('categoryTitle').textContent = '搜索结果';
                         var grid = document.getElementById('productGrid');
-                        grid.innerHTML = '<p style="text-align: center; color: #999; padding: 50px; font-size: 18px;">😔 未找到包含"' + keyword + '"的商品</p>';
+                        grid.innerHTML = '<p style="text-align: center; color: #888; padding: 50px; font-size: 16px;">未找到包含“' + keyword + '”的商品</p>';
                         showToast(' 未找到该商品', 'error');
                     }
                 })
@@ -941,15 +1085,10 @@
                     if (grid) {
                         grid.innerHTML = '<p style="text-align: center; color: red; padding: 50px;">搜索失败: ' + error.message + '</p>';
                     }
-                    showToast('✗ 搜索失败', 'error');
+                    showToast('搜索失败', 'error');
                 });
         }
-        
-        // ==============================
-        // 用户管理相关函数
-        // ==============================
-        
-        // 加载用户列表
+
         function loadUsers() {
             var contextPath = '${pageContext.request.contextPath}';
             fetch(contextPath + '/user_manage?action=list')
@@ -959,15 +1098,14 @@
                 })
                 .catch(function(error) {
                     console.error('加载用户失败:', error);
-                    showToast('✗ 加载用户列表失败', 'error');
+                    showToast('加载用户列表失败', 'error');
                 });
         }
         
-        // 渲染用户表格
         function renderUserTable(users) {
             var tbody = document.getElementById('userTableBody');
             if (!users || users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#b2bec3;padding:40px;">暂无用户</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#b2bec3;padding:40px;">暂无用户</td></tr>';
                 return;
             }
             
@@ -978,6 +1116,7 @@
                 var roleBadgeClass = u.role === 'admin' ? 'role-admin' : 'role-customer';
                 var roleLabel = u.role === 'admin' ? '管理员' : '普通用户';
                 var isSelf = u.username === currentUser;
+                var favCatName = u.favoriteCategory ? getCategoryName(u.favoriteCategory) : '暂无偏好';
                 
                 html += '<tr>';
                 html += '  <td><strong>' + escapeHtml(u.username) + '</strong>' + (isSelf ? ' <span style="color:#4a90d9;font-size:11px;">(我)</span>' : '') + '</td>';
@@ -985,22 +1124,26 @@
                 html += '  <td>' + u.orderCount + ' 单</td>';
                 html += '  <td>￥' + parseFloat(u.totalSpending).toFixed(2) + '</td>';
                 html += '  <td>' + u.reviewCount + ' 条</td>';
+                html += '  <td>' + favCatName + '</td>';
                 html += '  <td style="display:flex;gap:6px;align-items:center;">';
-                if (!isSelf) {
+                if (!isSelf && u.username !== 'admin2') {
                     var otherRole = u.role === 'admin' ? 'customer' : 'admin';
                     var otherRoleLabel = otherRole === 'admin' ? '设为管理员' : '设为普通用户';
                     html += '<button class="ship-btn" onclick="updateUserRole(\'' + escapeHtml(u.username) + '\', \'' + otherRole + '\')">' + otherRoleLabel + '</button>';
                 } else {
-                    html += '<span style="color:#b2bec3;font-size:12px;">不可修改</span>';
+                    var lockReason = u.username === 'admin2' ? '绝对管理员' : '不可修改';
+                    html += '<span style="color:#b2bec3;font-size:12px;">' + lockReason + '</span>';
                 }
                 html += '  <button class="view-reviews-btn" onclick="showUserReviews(\'' + escapeHtml(u.username) + '\')">查看评价</button>';
+                if (currentUser === 'admin2' && !isSelf) {
+                    html += '  <button class="delete-user-btn" onclick="deleteUser(\'' + escapeHtml(u.username) + '\')">删除用户</button>';
+                }
                 html += '  </td>';
                 html += '</tr>';
             }
             tbody.innerHTML = html;
         }
         
-        // 修改用户权限
         function updateUserRole(username, newRole) {
             var roleLabel = newRole === 'admin' ? '管理员' : '普通用户';
             if (!confirm('确定要将用户 "' + username + '" 设为 ' + roleLabel + ' 吗？')) return;
@@ -1019,23 +1162,21 @@
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 if (data.success) {
-                    showToast('✓ ' + data.message, 'success');
+                    showToast(data.message, 'success');
                     loadUsers();
                 } else {
-                    showToast('✗ ' + (data.error || '修改失败'), 'error');
+                    showToast(data.error || '修改失败', 'error');
                 }
             })
             .catch(function(error) {
                 console.error('修改权限失败:', error);
-                showToast('✗ 修改权限失败', 'error');
+                showToast('修改权限失败', 'error');
             });
         }
         
-        // 查看用户评价（弹出模态框）
         function showUserReviews(username) {
             document.getElementById('reviewModalTitle').textContent = '用户评价 - ' + username;
             document.getElementById('reviewModal').classList.add('show');
-            // 隐藏评价摘要（用户评价模式不需要商品评分汇总）
             document.getElementById('reviewSummary').style.display = 'none';
             
             var contextPath = '${pageContext.request.contextPath}';
@@ -1045,16 +1186,15 @@
                     if (data.success) {
                         renderUserReviewsList(data.reviews);
                     } else {
-                        showToast('✗ 加载评价失败', 'error');
+                        showToast('加载评价失败', 'error');
                     }
                 })
                 .catch(function(error) {
                     console.error('加载用户评价失败:', error);
-                    showToast('✗ 加载评价失败', 'error');
+                    showToast('加载评价失败', 'error');
                 });
         }
         
-        // 渲染用户评价列表（在模态框中）
         function renderUserReviewsList(reviews) {
             var reviewList = document.getElementById('reviewList');
             if (!reviews || reviews.length === 0) {
@@ -1080,16 +1220,43 @@
             reviewList.innerHTML = html;
         }
         
-        // 页面加载
+        // admin2专属删除权限
+        function deleteUser(username) {
+            if (!confirm('确定要删除用户 "' + username + '" 吗？\n其购物车和未完成的订单将同时被删除！')) {
+                return;
+            }
+
+            var contextPath = '${pageContext.request.contextPath}';
+            var params = new URLSearchParams();
+            params.append('action', 'delete_user');
+            params.append('username', username);
+
+            fetch(contextPath + '/user_manage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString()
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    loadUsers();
+                } else {
+                    showToast(data.error || '删除失败', 'error');
+                }
+            })
+            .catch(function(error) {
+                console.error('删除用户失败:', error);
+                showToast('删除用户失败', 'error');
+            });
+        }
+
         window.onload = function() {
-            // 初始化显示商品管理
-            switchSection('product');
-            
-            // 加载初始分类
+            switchSection('order');
+
             const urlParams = new URLSearchParams(window.location.search);
             const category = urlParams.get('category') || 'phone';
-            
-            // 设置分类导航激活状态
+
             document.querySelectorAll('.nav-item[data-category]').forEach(item => {
                 item.classList.remove('active');
                 if (item.getAttribute('data-category') === category) {
@@ -1099,8 +1266,7 @@
             
             document.getElementById('categoryTitle').textContent = getCategoryName(category);
             loadProducts(category);
-            
-            // 管理菜单点击事件（商品管理、订单管理）
+
             document.querySelectorAll('.nav-item[data-section]').forEach(item => {
                 item.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -1108,24 +1274,20 @@
                     if (!target) return;
                     
                     const section = target.getAttribute('data-section');
-                    
-                    // 清除分类导航激活状态
+
                     document.querySelectorAll('.nav-item[data-category]').forEach(nav => {
                         nav.classList.remove('active');
                     });
-                    
-                    // 更新激活状态
+
                     document.querySelectorAll('.nav-item[data-section]').forEach(nav => {
                         nav.classList.remove('active');
                     });
                     target.classList.add('active');
-                    
-                    // 切换区域
+
                     switchSection(section);
                 });
             });
-            
-            // 分类导航点击事件
+
             document.querySelectorAll('.nav-item[data-category]').forEach(item => {
                 item.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -1133,16 +1295,13 @@
                     if (!target) return;
                     
                     const category = target.getAttribute('data-category');
-                    
-                    // 切换到商品管理
+
                     switchSection('product');
-                    
-                    // 清除管理菜单激活状态
+
                     document.querySelectorAll('.nav-item[data-section]').forEach(nav => {
                         nav.classList.remove('active');
                     });
-                    
-                    // 更新激活状态
+
                     document.querySelectorAll('.nav-item[data-category]').forEach(nav => {
                         nav.classList.remove('active');
                     });

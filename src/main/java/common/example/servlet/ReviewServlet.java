@@ -30,7 +30,7 @@ public class ReviewServlet extends HttpServlet {
         double avgRating = ProductReviewDAO.getAverageRating(productId);
         int reviewCount = ProductReviewDAO.getReviewCount(productId);
         
-        // 检查用户是否可以评价
+        // 检查用户是否有资格评价
         HttpSession session = request.getSession(false);
         boolean canReview = false;
         
@@ -82,7 +82,7 @@ public class ReviewServlet extends HttpServlet {
         
         String action = request.getParameter("action");
         
-        // 删除评价（管理员）
+        // 删除评价（管理员权限）
         if ("delete".equals(action)) {
             String role = (String) session.getAttribute("role");
             if (!"admin".equals(role)) {
@@ -111,7 +111,7 @@ public class ReviewServlet extends HttpServlet {
             return;
         }
         
-        // 检查管理员权限
+        // 管理员不能评价
         String role = (String) session.getAttribute("role");
         if ("admin".equals(role)) {
             response.getWriter().write("{\"success\":false,\"message\":\"管理员无权评价商品\"}");
@@ -123,7 +123,7 @@ public class ReviewServlet extends HttpServlet {
         String ratingStr = request.getParameter("rating");
         String content = request.getParameter("content");
         
-        // 参数验证
+        // 验证参数
         if (productId == null || productId.trim().isEmpty()) {
             response.getWriter().write("{\"success\":false,\"message\":\"商品ID不能为空\"}");
             return;
@@ -145,13 +145,13 @@ public class ReviewServlet extends HttpServlet {
             return;
         }
         
-        // 检查是否购买过
+        // 只有购买过才能评价
         if (!ProductReviewDAO.hasUserPurchased(username, productId)) {
             response.getWriter().write("{\"success\":false,\"message\":\"您还没有购买过该商品，无法评价\"}");
             return;
         }
         
-        // 添加评价
+        // 写入评价
         boolean success = ProductReviewDAO.addReview(productId, username, rating, content.trim());
         
         if (success) {

@@ -113,6 +113,13 @@ public class UserManagementServlet extends HttpServlet {
                 return;
             }
 
+            // admin2 是绝对管理员，其角色不可被修改
+            if ("admin2".equals(username)) {
+                out.print("{\"success\":false,\"error\":\"admin2 是绝对管理员，无法修改其权限\"}");
+                out.flush();
+                return;
+            }
+
             if (!"admin".equals(newRole) && !"customer".equals(newRole)) {
                 response.setStatus(400);
                 out.print("{\"error\":\"无效的角色值\"}");
@@ -126,6 +133,37 @@ public class UserManagementServlet extends HttpServlet {
             } else {
                 out.print("{\"success\":false,\"error\":\"权限修改失败\"}");
             }
+        } else if ("delete_user".equals(action)) {
+            // 仅 admin2 有删除用户的权限
+            String currentUsername = (String) session.getAttribute("username");
+            if (!"admin2".equals(currentUsername)) {
+                response.setStatus(403);
+                out.print("{\"success\":false,\"error\":\"只有 admin2 才有删除用户的权限\"}");
+                out.flush();
+                return;
+            }
+
+            String username = request.getParameter("username");
+            if (username == null || username.isEmpty()) {
+                response.setStatus(400);
+                out.print("{\"success\":false,\"error\":\"缺少用户名参数\"}");
+                out.flush();
+                return;
+            }
+
+            // 不能删除自己
+            if (currentUsername.equals(username)) {
+                out.print("{\"success\":false,\"error\":\"不能删除自己\"}");
+                out.flush();
+                return;
+            }
+
+            boolean success = UserDAO.deleteUserByUsername(username);
+            if (success) {
+                out.print("{\"success\":true,\"message\":\"用户已删除\"}");
+            } else {
+                out.print("{\"success\":false,\"error\":\"删除用户失败\"}");
+            }
         } else {
             response.setStatus(400);
             out.print("{\"error\":\"未知操作\"}");
@@ -133,7 +171,6 @@ public class UserManagementServlet extends HttpServlet {
         out.flush();
     }
 
-    /** 构建用户列表JSON（含订单数、消费金额、评价数） */
     private String buildUserListJson(List<User> users) {
         StringBuilder json = new StringBuilder();
         json.append("{\"users\":[");
@@ -143,13 +180,15 @@ public class UserManagementServlet extends HttpServlet {
             int orderCount = UserDAO.getUserOrderCount(u.getUsername());
             double totalSpending = UserDAO.getUserTotalSpending(u.getUsername());
             int reviewCount = UserDAO.getUserReviewCount(u.getUsername());
+            String favCategory = UserDAO.getUserFavoriteCategory(u.getUsername());
 
             json.append("{");
             json.append("\"username\":\"").append(escapeJson(u.getUsername())).append("\",");
             json.append("\"role\":\"").append(escapeJson(u.getRole())).append("\",");
             json.append("\"orderCount\":").append(orderCount).append(",");
             json.append("\"totalSpending\":").append(String.format("%.2f", totalSpending)).append(",");
-            json.append("\"reviewCount\":").append(reviewCount);
+            json.append("\"reviewCount\":").append(reviewCount).append(",");
+            json.append("\"favoriteCategory\":\"").append(escapeJson(favCategory)).append("\"");
             json.append("}");
 
             if (i < users.size() - 1) json.append(",");
@@ -159,7 +198,6 @@ public class UserManagementServlet extends HttpServlet {
         return json.toString();
     }
 
-    /** 构建评价列表JSON */
     private String buildReviewsJson(List<ProductReview> reviews) {
         StringBuilder json = new StringBuilder();
         json.append("{\"success\":true,\"reviews\":[");
@@ -184,7 +222,7 @@ public class UserManagementServlet extends HttpServlet {
         return json.toString();
     }
 
-    /** JSON字符串转义 */
+    // JSON转义
     private String escapeJson(String text) {
         if (text == null) return "";
         return text.replace("\\", "\\\\")

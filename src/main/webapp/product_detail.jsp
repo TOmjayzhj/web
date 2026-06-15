@@ -8,14 +8,13 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css">
     <title>商品详情</title>
     <style>
-        /* 页面特定样式 - 商品详情页单列布局 */
         body { min-height: 100vh; padding: 20px; }
         .container { display: block; max-width: 1000px; margin: 0 auto; }
         .back-btn {
             display: inline-block;
-            padding: 8px 16px;
-            background: #f1f2f6;
-            color: #636e72;
+            padding: 9px 18px;
+            background-color: #27ae60;
+            color: white;
             text-decoration: none;
             border-radius: 6px;
             margin-bottom: 20px;
@@ -23,7 +22,11 @@
             font-size: 13px;
             transition: all 0.15s;
         }
-        .back-btn:hover { background: #dfe4ea; color: #2d3436; }
+        .back-btn:hover {
+            background-color: #219a52;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
         .product-card {
             background: white;
             padding: 28px;
@@ -31,6 +34,10 @@
             margin-bottom: 18px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.06);
             border: 1px solid rgba(0,0,0,0.04);
+            transition: box-shadow 0.2s;
+        }
+        .product-card:hover {
+            box-shadow: 0 4px 14px rgba(0,0,0,0.09);
         }
         .product-header { display: flex; gap: 28px; align-items: center; }
         .product-icon {
@@ -41,8 +48,8 @@
             border-radius: 10px;
             border: 1px solid #f1f2f6;
         }
-        .product-info h1 { font-size: 24px; color: #2d3436; margin-bottom: 8px; font-weight: 600; }
-        .product-info .price { font-size: 28px; color: #e74c3c; font-weight: 700; margin-bottom: 8px; }
+        .product-info h1 { font-size: 24px; color: #2d3436; margin-bottom: 10px; font-weight: 600; }
+        .product-info .price { font-size: 28px; color: #e74c3c; font-weight: 700; margin-bottom: 10px; }
         .product-info .category { color: #636e72; font-size: 14px; }
         .rating-section {
             background: #f8fafc;
@@ -91,8 +98,11 @@
         .form-group label { display: block; margin-bottom: 6px; color: #636e72; font-weight: 500; font-size: 13px; }
         .star-rating { display: flex; gap: 8px; font-size: 28px; }
         .star-rating input { display: none; }
-        .star-rating label { cursor: pointer; color: #dfe4ea; transition: color 0.15s; }
-        .star-rating label:hover,
+        .star-rating label { cursor: pointer; color: #dfe4ea; transition: color 0.15s, transform 0.15s; }
+        .star-rating label:hover {
+            color: #f39c12;
+            transform: scale(1.15);
+        }
         .star-rating label:hover ~ label,
         .star-rating input:checked ~ label { color: #f39c12; }
         .form-group textarea {
@@ -117,9 +127,10 @@
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
-            transition: background-color 0.15s;
+            transition: background-color 0.15s, transform 0.1s;
         }
         .submit-btn:hover { background: #357abd; }
+        .submit-btn:active { background: #2c6aa0; transform: scale(0.97); }
         .submit-btn:disabled { background: #b2bec3; cursor: not-allowed; }
         .alert {
             padding: 12px 16px;
@@ -127,6 +138,7 @@
             margin-bottom: 16px;
             display: none;
             font-size: 14px;
+            font-weight: 500;
         }
         .alert-success {
             background: #d4edda;
@@ -142,6 +154,8 @@
     </style>
 </head>
 <body>
+    <div id="toast" class="toast"></div>
+    
     <div class="container">
         <a href="shop.jsp" class="back-btn">← 返回商城</a>
         
@@ -157,7 +171,7 @@
         </div>
         
         <div class="product-card">
-            <h2 style="margin-bottom: 20px; color: #333;">商品评价</h2>
+            <h2 style="margin-bottom: 20px; color: #2d3436; font-size: 18px; font-weight: 600;">商品评价</h2>
             
             <div id="alertBox" class="alert"></div>
             
@@ -179,7 +193,7 @@
             
             <div class="review-form" id="reviewForm" style="display: none;">
                 <h3>发表评价</h3>
-                <p style="color: #666; margin-bottom: 15px; font-size: 14px;">购买后随时可以追加评价</p>
+                <p style="color: #888; margin-bottom: 15px; font-size: 13px;">购买后随时可以追加评价</p>
                 <form id="addReviewForm">
                     <input type="hidden" id="productId" name="productId">
                     
@@ -215,22 +229,18 @@
     </div>
     
     <script>
-        // 获取URL参数
         function getUrlParameter(name) {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(name);
         }
-        
-        // 加载商品信息
+
         function loadProduct() {
             const productId = getUrlParameter('id');
             if (!productId) {
-                alert('商品ID不存在');
                 window.location.href = 'shop.jsp';
                 return;
             }
             
-            // 从ProductServlet获取商品信息
             fetch('products?action=getDetail&productId=' + productId)
                 .then(response => response.json())
                 .then(data => {
@@ -242,29 +252,25 @@
                         document.getElementById('productCategory').textContent = product.category;
                         document.getElementById('productId').value = product.id;
                     } else {
-                        alert(data.message || '商品不存在');
                         window.location.href = 'shop.jsp';
                     }
                 })
                 .catch(error => {
                     console.error('加载商品失败:', error);
-                    alert('加载商品失败');
+                    showToast('加载商品失败', 'error');
                 });
         }
-        
-        // 加载评价
+
         function loadReviews() {
             const productId = getUrlParameter('id');
             fetch('review?productId=' + productId)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // 更新评分统计
                         document.getElementById('avgRating').textContent = data.avgRating > 0 ? data.avgRating.toFixed(1) : '--';
                         document.getElementById('avgStars').textContent = getStars(data.avgRating);
                         document.getElementById('reviewCount').textContent = data.reviewCount > 0 ? data.reviewCount + ' 条评价' : '暂无评价';
-                        
-                        // 显示评价列表
+
                         const reviewsList = document.getElementById('reviewsList');
                         if (data.reviews && data.reviews.length > 0) {
                             var html = '';
@@ -281,8 +287,7 @@
                             }
                             reviewsList.innerHTML = html;
                         }
-                        
-                        // 控制评价表单显示
+
                         if (data.canReview) {
                             document.getElementById('reviewForm').style.display = 'block';
                             document.getElementById('cannotReview').style.display = 'none';
@@ -294,27 +299,19 @@
                 })
                 .catch(error => console.error('加载评价失败:', error));
         }
-        
-        // 提交评价
+
         document.getElementById('addReviewForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // 直接从 URL 获取商品ID
+
             const productId = getUrlParameter('id');
-            console.log('=== 开始提交评价 ===');
-            console.log('URL中的商品ID:', productId);
             
             if (!productId) {
                 showAlert('商品ID不存在', false);
                 return;
             }
-            
-            // 获取表单数据
+
             const rating = document.querySelector('input[name="rating"]:checked');
             const content = document.getElementById('content').value;
-            
-            console.log('评分:', rating ? rating.value : '未选择');
-            console.log('评价内容:', content);
             
             if (!rating) {
                 showAlert('请选择评分', false);
@@ -325,14 +322,11 @@
                 showAlert('请输入评价内容', false);
                 return;
             }
-            
-            // 构建请求数据
+
             const params = new URLSearchParams();
             params.append('productId', productId);
             params.append('rating', rating.value);
             params.append('content', content.trim());
-            
-            console.log('发送的数据:', params.toString());
             
             fetch('review', {
                 method: 'POST',
@@ -343,10 +337,8 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log('后端返回:', data);
                 showAlert(data.message, data.success);
                 if (data.success) {
-                    // 刷新评价列表
                     setTimeout(() => {
                         loadReviews();
                         this.reset();
@@ -358,8 +350,7 @@
                 showAlert('提交失败，请重试', false);
             });
         });
-        
-        // 显示提示信息
+
         function showAlert(message, success) {
             const alertBox = document.getElementById('alertBox');
             alertBox.textContent = message;
@@ -368,28 +359,33 @@
                 alertBox.className = 'alert';
             }, 3000);
         }
-        
-        // 生成星星
+
         function getStars(rating) {
             const fullStars = Math.floor(rating);
             const emptyStars = 5 - fullStars;
             return '★'.repeat(fullStars) + '☆'.repeat(emptyStars);
         }
-        
-        // 格式化时间
+
         function formatTime(timeStr) {
             const date = new Date(timeStr);
             return date.toLocaleString('zh-CN');
         }
-        
-        // HTML转义
+
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
-        
-        // 页面加载时执行
+
+        function showToast(message, type) {
+            type = type || 'success';
+            var toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            setTimeout(function() { toast.classList.add('show'); }, 10);
+            setTimeout(function() { toast.classList.remove('show'); }, 2000);
+        }
+
         loadProduct();
         loadReviews();
     </script>
